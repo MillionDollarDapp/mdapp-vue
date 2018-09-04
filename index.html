@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" id="mdappViewport" content="width=device-width,initial-scale=1.0,user-scalable=yes">
+    <title>MDAPP - Million Dollar Decentralized Application</title>
+    <script>
+      window.onload = function() {
+        if (screen.width < 1280) {
+          var mvp = document.getElementById('mdappViewport')
+          mvp.setAttribute('content','width=1280,user-scalable=yes')
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>

@@ -1,0 +1,119 @@
+import Raven from 'raven-js'
+import adFilter from './adFilter'
+import saleFilter from './saleFilter'
+import { watchTransaction } from '../transaction'
+import {store} from '../../store/'
+import utils from '../utils'
+
+const filters = {
+  init () {
+    if (store.state.web3.block === null ||
+      store.state.mdappContractInstance === null) {
+      setTimeout(() => { this.init() }, 100)
+      return
+    }
+    store.dispatch('setInitBlock', store.state.web3.block + 1)
+
+    this.initUser()
+    this.initOtherAds()
+  },
+
+  initUser () {
+    if (store.state.web3.block === null ||
+      store.state.mdappContractInstance === null ||
+      store.state.saleContractInstance === null) {
+      setTimeout(() => { this.initUser() }, 100)
+      return
+    }
+
+    if (!store.state.web3.coinbase) return
+
+    // Set initBlock again, as this is important when the user changes his account. We want the new watchers
+    // to start in the present not in the past.
+    store.dispatch('setInitBlock', store.state.web3.block + 1)
+
+    Promise.all([
+      adFilter.getUserAds(),
+      saleFilter.getUserPurchases()
+    ]).then(values => {
+      if (values[0].ads.size > 0) {
+        store.dispatch('setHelperProgress', ['claim', true])
+      }
+
+      store.dispatch('initUserAds', values[0].ads)
+
+      // Mix transactions of several filters together and bring them into the right order, then store them.
+      this._storeUserTransactions(values[0].txs, values[1])
+
+      // Lookup block times
+      utils.setBlockTimes(values[0].ads)
+
+      // Start watching.
+      adFilter.watchUserAds()
+      saleFilter.watchUser()
+    }).catch(e => {
+      Raven.captureException(e)
+    })
+  },
+
+  initOtherAds () {
+    if (store.state.web3.block === null ||
+      store.state.mdappContractInstance === null) {
+      setTimeout(() => { this.initOtherAds() }, 100)
+      return
+    }
+
+    // Get current list of active ad ids. These ids need to be inited. Otherwise we have to crawl a huge history from
+    // past to present which might take quite a while.
+    (async () => {
+      let adIds = await store.state.mdappContractInstance().getAdIds()
+
+      Promise.all([
+        adFilter.getAllAds(adIds)
+      ]).then(values => {
+        store.dispatch('initAllAds', values[0])
+
+        // Lookup block times
+        utils.setBlockTimes(values[0])
+
+        // Start watching.
+        adFilter.watchAllAds()
+      })
+    })()
+  },
+
+  _storeUserTransactions (txs1, txs2) {
+    // Merge txs1 and txs2 into one map block -> transactionIndex[] -> transaction
+    let allTxs = new Map(txs1)
+
+    txs2.forEach((txs, key, map) => {
+      if (!allTxs.has(key)) {
+        allTxs.set(key, txs)
+      } else {
+        let blockTxs = allTxs.get(key)
+        txs.forEach((tx, index) => {
+          blockTxs[index] = tx
+        })
+        allTxs.set(key, blockTxs)
+      }
+    })
+
+    // Sort the map by blocknumber
+    var mapSorted = new Map([...allTxs.entries()].sort(function (a, b) {
+      return a[0] - b[0]
+    }))
+
+    mapSorted.forEach((txs, key, map) => {
+      // key is the block number
+      // value is an array containing all txs within that block
+      // txs are keyed by their transactionIndex
+      txs.forEach((tx, index) => {
+        store.dispatch('addTransaction', tx)
+
+        if (tx.status !== 'completed') watchTransaction(tx)
+      })
+    })
+  }
+}
+
+export default filters
