@@ -357,39 +357,39 @@ export default {
     loadDefaultImage () {
       if (this.ad.image) {
         // Create DataUrl from URL
-        let request = new XMLHttpRequest()
-        request.open('GET', this.ad.image, true)
-        request.responseType = 'blob'
-        request.onload = () => {
-          // Request done
-          let reader = new FileReader()
-          reader.onload = e => {
-            // Filereader done
+        api.download(this.ad.image)
+          .then(response => {
+            // Request done
+            let reader = new FileReader()
+            reader.onload = e => {
+              // Filereader done
 
-            let img = new Image()
-            img.onload = () => {
-              // Image done
-              try {
-                // Read file extension from DataUrl and require it to be jpeg or png
-                let mime = e.target.result.substring(5, e.target.result.indexOf(';base64'))
-                if (mime !== 'image/jpeg' && mime !== 'image/png') throw new Error('Invalid file type: ' + mime)
+              let img = new Image()
+              img.onload = () => {
+                // Image done
+                try {
+                  // Read file extension from DataUrl and require it to be jpeg or png
+                  let mime = e.target.result.substring(5, e.target.result.indexOf(';base64'))
+                  if (mime !== 'image/jpeg' && mime !== 'image/png') throw new Error('Invalid file type: ' + mime)
 
-                this.imageExtension = mime.indexOf('jpeg') > -1 ? 'jpeg' : 'png'
-                this.imageDimensions = [img.width, img.height]
-                this.previewData = e.target.result
-                this.resultBlob = this._dataUrltoBlob(this.previewData, mime)
-                this.cropped = true
-                this.upload = false
-              } catch (error) {
-                Raven.captureException(error)
-                console.log('Load default image:', error)
+                  this.imageExtension = mime.indexOf('jpeg') > -1 ? 'jpeg' : 'png'
+                  this.imageDimensions = [img.width, img.height]
+                  this.previewData = e.target.result
+                  this.resultBlob = this._dataUrltoBlob(this.previewData, mime)
+                  this.cropped = true
+                  this.upload = false
+                } catch (error) {
+                  Raven.captureException(error)
+                  console.log('Load default image:', error)
+                }
               }
+              img.src = e.target.result
             }
-            img.src = e.target.result
-          }
-          reader.readAsDataURL(request.response)
-        }
-        request.send()
+            reader.readAsDataURL(response)
+          }).catch(error => {
+            console.error('image download:', error)
+            Raven.captureException(error)
+          })
       }
     },
 

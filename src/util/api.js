@@ -10,6 +10,15 @@ export default {
     return axios.post('/upload', data)
   },
 
+  download (url) {
+    return axios({
+      method: 'get',
+      url: url,
+      crossDomain: true,
+      responseType: 'blob'
+    })
+  },
+
   ping () {
     let config = { responseType: 'text' }
     return axios.get('/ping', config)
