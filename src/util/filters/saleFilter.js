@@ -1,97 +1,74 @@
 import Raven from 'raven-js'
-import Web3 from 'web3'
 import {store} from '../../store/'
 import utils from '../utils'
 import {watchTransaction} from '../transaction'
-
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
 
 const saleFilter = {
   /**
    * Get all purchase involved transactions of the current user.
    * Call it once at app initialization or on coinbase changes.
    */
-  getUserPurchases () {
-    return new Promise((resolve, reject) => {
-      // Will hold all transactions which caused an event.
-      let txs = new Map()
+  async getUserPurchases () {
+    // Will hold all transactions which caused an event.
+    let txs = new Map()
 
-      let purchaseFilter = store.state.saleContractInstance().contract.TokenPurchase({
-        purchaser: store.state.web3.coinbase
-      }, {
-        fromBlock: process.env.START_BLOCK,
-        toBlock: store.state.web3.block
-      }).get((error, logs) => {
-        purchaseFilter.stopWatching()
-
-        if (error) reject(error)
-
-        for (let key in logs) {
-          let log = logs[key]
-
-          if (!txs.has(log.blockNumber)) {
-            txs.set(log.blockNumber, [])
-          }
-
-          this._processLog(txs, log)
-        }
-
-        resolve(txs)
-      })
-
-      // Get your recruitments.
-      let recruitementFilter = store.state.saleContractInstance().contract.Recruited({
-        recruiter: store.state.web3.coinbase
-      }, {
-        fromBlock: process.env.START_BLOCK,
-        toBlock: store.state.web3.block
-      }).get((error, logs) => {
-        recruitementFilter.stopWatching()
-
-        if (error) reject(error)
-
-        for (let key in logs) {
-          let log = logs[key]
-
-          if (!txs.has(log.blockNumber)) {
-            txs.set(log.blockNumber, [])
-          }
-
-          this._processLog(txs, log)
-        }
-
-        resolve(txs)
-      })
-
-      // Show all bounties to admin.
-      let bountyOptions = {}
-
-      if (store.state.web3.coinbase !== store.state.owner) {
-        // Show only your received bounties.
-        bountyOptions.beneficiary = store.state.web3.coinbase
-      }
-      let bountyFilter = store.state.saleContractInstance().contract.BountyGranted(bountyOptions, {
-        fromBlock: process.env.START_BLOCK,
-        toBlock: store.state.web3.block
-      }).get((error, logs) => {
-        bountyFilter.stopWatching()
-
-        if (error) reject(error)
-
-        for (let key in logs) {
-          let log = logs[key]
-
-          if (!txs.has(log.blockNumber)) {
-            txs.set(log.blockNumber, [])
-          }
-
-          this._processLog(txs, log)
-        }
-
-        resolve(txs)
-      })
+    let purchasesPromise = store.state.saleContractInstance().getPastEvents('TokenPurchase', {
+      filter: { purchaser: store.state.web3.coinbase },
+      fromBlock: process.env.DAPP_GENESIS,
+      toBlock: store.state.web3.block
     })
+    let recruitmentsPromise = store.state.saleContractInstance().getPastEvents('Recruited', {
+      filter: { recruiter: store.state.web3.coinbase },
+      fromBlock: process.env.DAPP_GENESIS,
+      toBlock: store.state.web3.block
+    })
+
+    // If admin then show all bounties otherwise only own.
+    let bountyOptions = {
+      fromBlock: process.env.START_BLOCK,
+      toBlock: store.state.web3.block
+    }
+    if (store.state.web3.coinbase !== store.state.owner) {
+      // Show only your received bounties.
+      bountyOptions.filter = { beneficiary: store.state.web3.coinbase }
+    }
+    let bountyPromise = store.state.saleContractInstance().getPastEvents('BountyGranted', bountyOptions)
+
+    try {
+      let values = await Promise.all([purchasesPromise, recruitmentsPromise, bountyPromise])
+
+      // Process users purchases.
+      for (let key in values[0]) {
+        let log = values[0][key]
+        if (!txs.has(log.blockNumber)) {
+          txs.set(log.blockNumber, [])
+        }
+        this._processLog(txs, log)
+      }
+
+      // Process users recruitments.
+      for (let key in values[1]) {
+        let log = values[1][key]
+        if (!txs.has(log.blockNumber)) {
+          txs.set(log.blockNumber, [])
+        }
+        this._processLog(txs, log)
+      }
+
+      // Process bounties.
+      for (let key in values[2]) {
+        let log = values[2][key]
+        if (!txs.has(log.blockNumber)) {
+          txs.set(log.blockNumber, [])
+        }
+        this._processLog(txs, log)
+      }
+
+      return txs
+    } catch (error) {
+      console.error('getUserPurchases:', error)
+      Raven.captureException(error)
+    }
   },
 
   _recruitementFilter: null,
@@ -99,23 +76,27 @@ const saleFilter = {
   watchUser () {
     if (this._recruitementFilter) {
       // Stop old filters
-      this._recruitementFilter.stopWatching()
+      this._recruitementFilter.unsubscribe()
     }
 
-    this._recruitementFilter = store.state.saleContractInstance().contract.Recruited({
-      recruiter: store.state.web3.coinbase
-    }, {
+    this._recruitementFilter = store.state.saleContractInstance().events.Recruited({
+      filter: { recruiter: store.state.web3.coinbase },
       fromBlock: store.state.initBlock,
-      toBlock: 'last'
-    }).watch((error, log) => {
-      if (error) {
-        console.error('User recruited watch:', error)
-        Raven.captureException(error)
-        return
-      }
-
-      this._processWatchLog(log)
+      toBlock: 'latest'
     })
+      .on('data', event => {
+        this._processWatchLog(event)
+      })
+      .on('changed', event => {
+        Raven.captureMessage('A recruitment event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
+        console.error('Watch user recruitments:', error)
+        Raven.captureException(error)
+      })
   },
 
   /**
@@ -126,31 +107,34 @@ const saleFilter = {
    * @private
    */
   _processLog (txs, log) {
+    let web3 = store.state.web3.web3Instance()
+
     let tx = {
       hash: log.transactionHash,
       status: store.state.web3.block - log.blockNumber >= process.env.CONFIRMATIONS ? 'completed' : 'confirmed',
       block: log.blockNumber
     }
 
+    let values = log.returnValues
     switch (log.event) {
       case 'TokenPurchase':
-        if (log.args.beneficiary === store.state.web3.coinbase) {
-          tx.desc = `Buy ${log.args.tokens.toNumber()} MDAPP (${web3.fromWei(log.args.value, 'ether')} ETH).`
+        if (values.beneficiary === store.state.web3.coinbase) {
+          tx.desc = `Buy ${values.tokens} MDAPP (${web3.utils.fromWei(values.value, 'ether')} ETH).`
         } else {
-          tx.desc = `Buy ${log.args.tokens.toNumber()} MDAPP (${web3.fromWei(log.args.value, 'ether')} ETH) for ${log.args.beneficiary.substr(0, 12)}... .`
+          tx.desc = `Buy ${values.tokens} MDAPP (${web3.utils.fromWei(values.value, 'ether')} ETH) for ${values.beneficiary.substr(0, 12)}... .`
         }
         break
 
       case 'BountyGranted':
-        if (log.args.beneficiary === store.state.web3.coinbase) {
-          tx.desc = `Received ${log.args.tokens.toNumber()} MDAPP bounty: ${utils.escapeHTML(log.args.reason)}`
+        if (values.beneficiary === store.state.web3.coinbase) {
+          tx.desc = `Received ${values.tokens} MDAPP bounty: ${utils.escapeHTML(values.reason)}`
         } else {
-          tx.desc = `Grant ${log.args.tokens.toNumber()} MDAPP bounty to ${log.args.beneficiary}: ${utils.escapeHTML(log.args.reason)}`
+          tx.desc = `Grant ${values.tokens} MDAPP bounty to ${values.beneficiary}: ${utils.escapeHTML(values.reason)}`
         }
         break
 
       case 'Recruited':
-        let share = web3.fromWei(log.args.share, 'ether')
+        let share = web3.utils.fromWei(values.share, 'ether')
         tx.desc = `You earned ${share} ETH from a referral.`
         break
 
@@ -164,8 +148,10 @@ const saleFilter = {
   },
 
   _processWatchLog (log) {
+    let web3 = store.state.web3.web3Instance()
     let tx = store.state.transactions.get(log.transactionHash)
 
+    let values = log.returnValues
     if (!tx) {
       // New user transaction found.
       tx = {
@@ -178,7 +164,7 @@ const saleFilter = {
 
     switch (log.event) {
       case 'Recruited':
-        let share = web3.fromWei(log.args.share, 'ether')
+        let share = web3.utils.fromWei(values.share, 'ether')
         tx.desc = `You earned ${share} ETH from a referral.`
         break
 

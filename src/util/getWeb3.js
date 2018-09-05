@@ -1,91 +1,45 @@
 import Web3 from 'web3'
+import Raven from 'raven-js'
 
-/*
-* 1. Check for injected web3 (mist/metamask)
-* 2. If metamask/mist create a new web3 instance and pass on result
-* 3. Get networkId - Now we can check the user is connected to the right network to use our dApp
-* 4. Get user account from metamask
-* 5. Get user balance
-*/
+const getWeb3 = async () => {
+  let result = {}
 
-const getWeb3 = new Promise(function (resolve, reject) {
-  // Check for injected web3 (mist/metamask)
-  var web3js = window.web3
+  let web3js = window.web3
   if (typeof web3js !== 'undefined') {
-    let delivered = web3js.hasOwnProperty('isDelivered')
+    let withMetamask = web3js.hasOwnProperty('withMetamask') && web3js.withMetamask
     let web3 = new Web3(web3js.currentProvider)
-    resolve({
-      injectedWeb3: !delivered,
+    result = {
+      injectedWeb3: withMetamask,
       web3 () {
         return web3
       }
-    })
+    }
   } else {
-    window.web3 = new Web3(new Web3.providers.HttpProvider(process.env.WEB3_ENDPOINT))
-    resolve({
+    window.web3 = new Web3(new Web3.providers.WebsocketProvider(process.env.WEB3_ENDPOINT))
+    result = {
       injectedWeb3: false,
       web3 () {
         return window.web3
       }
-    })
+    }
   }
-}).then(result => {
-  return new Promise(function (resolve, reject) {
-    // Retrieve network ID
-    result.web3().version.getNetwork((err, networkId) => { // Deprecated!
-      if (err) {
-        // If we can't find a networkId keep result the same and reject the promise
-        reject(new Error('Unable to retrieve network ID'))
-      } else {
-        // Assign the networkId property to our result and resolve promise
-        result = Object.assign({}, result, {networkId})
-        resolve(result)
-      }
-    })
-  })
-}).then(result => {
-  return new Promise(function (resolve, reject) {
-    if (result.injectedWeb3) {
-      // Retrieve coinbase
-      result.web3().eth.getCoinbase((err, coinbase) => {
-        if (err) {
-          result = Object.assign({}, result, { coinbase: null })
-        } else {
-          result = Object.assign({}, result, { coinbase })
-        }
-        resolve(result)
-      })
-    }
-    result = Object.assign({}, result, { coinbase: null })
-    resolve(result)
-  })
-}).then(result => {
-  return new Promise(function (resolve, reject) {
-    // Retrieve balance for coinbase
-    if (result.coinbase) {
-      result.web3().eth.getBalance(result.coinbase, (err, balance) => {
-        if (err) {
-          reject(new Error('Unable to retrieve balance for address: ' + result.coinbase))
-        } else {
-          let balanceEth = Number(result.web3().fromWei(balance)).toFixed(3)
-          result = Object.assign({}, result, { balance })
-          result = Object.assign({}, result, { balanceEth })
-          resolve(result)
-        }
-      })
-    } else {
-      resolve(result)
-    }
-  })
-}).then(result => {
-  return new Promise((resolve, reject) => {
-    result.web3().eth.getBlockNumber((error, block) => {
-      if (error) reject(new Error('Unable to retrieve current block number.'))
 
-      result = Object.assign({}, result, { block })
-      resolve(result)
-    })
-  })
-})
+  // Get web3 state
+  try {
+    result.networkId = await result.web3().eth.net.getId()
+    result.block = await result.web3().eth.getBlockNumber()
+    result.coinbase = result.injectedWeb3 ? result.web3().utils.toChecksumAddress(await result.web3().eth.getCoinbase()) : null
+
+    if (result.coinbase) {
+      result.balance = result.web3().utils.toBN(await result.web3().eth.getBalance(result.coinbase))
+      result.balanceEth = Number(result.web3().utils.fromWei(result.balance, 'ether')).toFixed(3)
+    }
+  } catch (error) {
+    console.error('getWeb3:', error)
+    Raven.captureException(error)
+  }
+
+  return result
+}
 
 export default getWeb3

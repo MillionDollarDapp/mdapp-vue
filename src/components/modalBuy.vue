@@ -84,9 +84,9 @@
             </template>
           </b-col>
           <div class="w-100"/>
-          <b-col lg="3" cols="auto" class="label">Price per token:</b-col><b-col lg="5" cols="8">$100 ({{ (pixelPriceEth * 100).toFixed(8) }} ETH)</b-col>
+          <b-col lg="3" cols="auto" class="label">Price per token:</b-col><b-col lg="5" cols="8">$100 ({{ tokenPriceETH.toFixed(8) }} ETH)</b-col>
           <div class="w-100"/>
-          <b-col lg="3" cols="auto" class="label">Total cost:</b-col><b-col lg="5" cols="8">${{ (tokenQty * 100) }} ({{ cost.toFixed(8) }} ETH)</b-col>
+          <b-col lg="3" cols="auto" class="label">Total cost:</b-col><b-col lg="5" cols="8">${{ (tokenQty * 100) }} ({{ costEth.toFixed(8) }} ETH)</b-col>
           <div class="w-100"/>
           <b-col lg="3" cols="auto" class="label">Buy for:</b-col>
           <b-col lg="5" cols="8">
@@ -114,14 +114,10 @@
 
 <script>
 import Raven from 'raven-js'
-import Web3 from 'web3'
 import { Edit3Icon } from 'vue-feather-icons'
 import saleContract from '../util/interactions/saleContract'
 import { newTransaction } from '../util/transaction'
 import utils from '../util/utils'
-
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
 
 export default {
   name: 'modalBuy',
@@ -132,7 +128,7 @@ export default {
   props: {
     id: String,
     selectedTokenQty: Number,
-    pixelPriceEth: Number,
+    pixelPriceWei: Number,
     buyPossible: Boolean
   },
 
@@ -158,9 +154,16 @@ export default {
     hasConfirmed () {
       return (this.acceptedTC && this.acceptedOrigin)
     },
-    cost () {
+    tokenPriceETH () {
+      return Number(this.web3.utils.fromWei(this.$store.getters.tokenPriceWei))
+    },
+    costEth () {
       // Total cost in ETH
-      return ((this.pixelPriceEth * 1e8) * 100 * this.tokenQty) / 1e8
+      return Number(this.web3.utils.fromWei(this.$store.getters.pixelPriceWei.mul(this.web3.utils.toBN(100 * this.tokenQty)), 'ether'))
+    },
+    cost () {
+      // Total cost in Wei
+      return this.$store.getters.pixelPriceWei.mul(this.web3.utils.toBN(100 * this.tokenQty))
     },
     tokenQty: {
       get () {
@@ -173,6 +176,9 @@ export default {
         this.errorMsg = ''
         this.hasError = false
       }
+    },
+    web3 () {
+      return this.$store.state.web3.web3Instance()
     }
   },
 
@@ -205,7 +211,7 @@ export default {
           this.resetForm()
       }
     },
-    nextStep () {
+    async nextStep () {
       switch (this.step) {
         case 'tc':
           this.step = 'checkout'
@@ -228,22 +234,14 @@ export default {
 
           // Since the contract gets called async, the computed tokenQty value may change in the meantime.
           let requestedQty = this.tokenQty
-          let requestedCost = this.cost
+          let requestedCostEth = this.costEth
+          let requestedCostWei = this.cost
 
-          saleContract.buy(this.beneficiary, requestedQty, requestedCost, recruiter)
-            .then((txHash, err) => {
-              if (err) {
-                Raven.captureException(err)
-                let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
-                this.$swal({
-                  type: 'error',
-                  title: 'Error',
-                  html: msg,
-                  showConfirmButton: false
-                })
-                newTransaction(txHash, 'buyToken', {beneficiary: this.beneficiary, tokenQty: requestedQty, cost: requestedCost, error: msg}, 'error')
-                this.hideModal()
-              } else {
+          try {
+            let [error, tx] = await saleContract.buy(this.beneficiary, requestedQty, requestedCostWei, recruiter)
+            if (error) throw error
+            tx
+              .on('transactionHash', txHash => {
                 this.$swal({
                   type: 'success',
                   title: 'Transaction sent',
@@ -253,23 +251,28 @@ export default {
                     this.$emit('showTxLog')
                   }
                 })
-                newTransaction(txHash, 'buyToken', {beneficiary: this.beneficiary, tokenQty: requestedQty, cost: requestedCost}, 'pending')
+                newTransaction(txHash, 'buyToken', {beneficiary: this.beneficiary, tokenQty: requestedQty, cost: requestedCostEth}, 'pending')
                 this.hideModal()
                 // TODO: Print gift card if bought for 'other'
-              }
-            }).catch(e => {
-              Raven.captureException(e)
-              let msg = e.message
-              if (msg.indexOf('User denied transaction signature') === -1) {
-                this.$swal({
-                  type: 'error',
-                  title: 'Error',
-                  html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
-                  showConfirmButton: false
-                })
-              }
-              this.hideModal()
-            })
+              })
+              .on('error', error => {
+                throw error
+              })
+          } catch (error) {
+            let msg = error.message
+            if (msg.indexOf('User denied transaction signature') === -1) {
+              console.error('checkout:', error)
+              Raven.captureException(error)
+
+              this.$swal({
+                type: 'error',
+                title: 'Error',
+                html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
+                showConfirmButton: false
+              })
+            }
+            this.hideModal()
+          }
           break
       }
     },
@@ -282,7 +285,7 @@ export default {
       } else {
         // Token will go to someone else
         // this.beneficiaryInput = this.beneficiaryInput.toLowerCase()
-        if (!this.beneficiaryInput || !web3.isAddress(this.beneficiaryInput)) {
+        if (!this.beneficiaryInput || !this.web3.utils.isAddress(this.beneficiaryInput)) {
           // Either no foreign address given or invalid
           this.beneficiaryIsValid = false
         } else {
@@ -299,7 +302,7 @@ export default {
     },
 
     _validateBalance () {
-      if (this.$store.state.web3.balance.lt(web3.toBigNumber(web3.toWei(this.cost)))) {
+      if (!this.$store.state.web3.balance || this.$store.state.web3.balance.lt(this.cost)) {
         this.errorMsg = `Insufficient funds.`
         this.hasError = true
         return false

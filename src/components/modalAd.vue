@@ -157,10 +157,6 @@ import api from '../util/api'
 
 var croppie = null
 
-// ipfs files stat /mdapp/uploads
-// /mdapp: Qmc1DgS9nd68KSWLUYzYK1i5RjV1FhDT64VTpDm1CYHevq
-// /mdapp/uploads: QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn
-
 export default {
   name: 'modalAd',
   components: {
@@ -553,33 +549,33 @@ export default {
       }
     },
 
-    releaseBtnPressed () {
-      mdappContract.release(this.ad.id).then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
-          this.$swal({
-            type: 'error',
-            title: 'Error',
-            html: msg,
-            showConfirmButton: false
+    async releaseBtnPressed () {
+      try {
+        let [error, tx] = await mdappContract.release(this.ad.id)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+            newTransaction(txHash, 'release', { pixels: this.pixels }, 'pending')
+            this.hideModal()
           })
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false,
-            onAfterClose: () => {
-              this.$emit('showTxLog')
-            }
+          .on('error', error => {
+            throw error
           })
-          newTransaction(txHash, 'release', { pixels: this.pixels }, 'pending')
-        }
-        this.hideModal()
-      }).catch(e => {
-        Raven.captureException(e)
-        let msg = e.message
+      } catch (error) {
+        let msg = error.message
         if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('editAdBtn:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
@@ -588,35 +584,35 @@ export default {
           })
         }
         this.hideModal()
-      })
+      }
     },
 
-    _callEditAdMethod (mh) {
-      mdappContract.editAd(this.ad.id, this.link, this.title, this.text, this.contact, this.nsfw, mh.digest, mh.hashFunction, mh.size, 'ipfs').then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
-          this.$swal({
-            type: 'error',
-            title: 'Error',
-            html: msg,
-            showConfirmButton: false
+    async _callEditAdMethod (mh) {
+      try {
+        let [error, tx] = await mdappContract.editAd(this.ad.id, this.link, this.title, this.text, this.contact, this.nsfw, mh.digest, mh.hashFunction, mh.size, 'ipfs')
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+            newTransaction(txHash, 'editAd', {adId: this.ad.id}, 'pending')
           })
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false,
-            onAfterClose: () => {
-              this.$emit('showTxLog')
-            }
+          .on('error', error => {
+            throw error
           })
-          newTransaction(txHash, 'editAd', { adId: this.ad.id }, 'pending')
-        }
-      }).catch(e => {
-        Raven.captureException(e)
-        let msg = e.message
+      } catch (error) {
+        let msg = error.message
         if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('editAdBtn:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
@@ -624,7 +620,7 @@ export default {
             showConfirmButton: false
           })
         }
-      })
+      }
     },
 
     /**

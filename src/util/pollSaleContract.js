@@ -1,37 +1,67 @@
 import Raven from 'raven-js'
-import Web3 from 'web3'
 import {store} from '../store/'
-
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
 
 var pollSaleInterval = null
 
 const pollSaleContractFunction = async () => {
-  if (web3 && store.state.web3.web3Instance && store.state.saleContractInstance !== null) {
+  let web3 = store.state.web3.web3Instance()
+
+  if (web3 && store.state.saleContractInstance !== null) {
     try {
       let data = {}
-      data.ethusd = new web3.BigNumber(await store.state.saleContractInstance().ethusd()).toNumber()
-      data.soldOut = await store.state.saleContractInstance().soldOut()
-      data.supply = new web3.BigNumber(await store.state.saleContractInstance().supply()).toNumber()
+
+      let conditionalPromises = {
+        coinbase: false,
+        admins: false
+      }
+
+      let promises = [
+        store.state.saleContractInstance().methods.ethusd().call(),
+        store.state.saleContractInstance().methods.soldOut().call(),
+        store.state.saleContractInstance().methods.supply().call()
+      ]
 
       if (store.state.web3.coinbase) {
-        data.withdrawableBalance = await store.state.saleContractInstance().payments(store.state.web3.coinbase)
+        conditionalPromises.coinbase = true
+        promises.push(store.state.saleContractInstance().methods.payments(store.state.web3.coinbase).call())
       }
 
       if (store.state.web3.coinbase === store.state.owner ||
           store.state.web3.coinbase === store.state.wallet) {
-        data.oracleActive = await store.state.saleContractInstance().oracleActive()
-        data.oracleGasPrice = new web3.BigNumber(await store.state.saleContractInstance().oracleGasPrice()).toNumber()
-        data.oracleGasLimit = new web3.BigNumber(await store.state.saleContractInstance().oracleGasLimit()).toNumber()
-        data.oracleInterval = new web3.BigNumber(await store.state.saleContractInstance().oracleInterval()).toNumber()
-        data.oracleLastUpdate = new web3.BigNumber(await store.state.saleContractInstance().oracleLastUpdate()).toNumber() * 1000
+        conditionalPromises.admins = true
+        promises.push(store.state.saleContractInstance().methods.oracleActive().call())
+        promises.push(store.state.saleContractInstance().methods.oracleGasPrice().call())
+        promises.push(store.state.saleContractInstance().methods.oracleGasLimit().call())
+        promises.push(store.state.saleContractInstance().methods.oracleInterval().call())
+        promises.push(store.state.saleContractInstance().methods.oracleLastUpdate().call())
+      }
+
+      // Call all methods in parallel.
+      let values = await Promise.all(promises)
+
+      data.ethusd = parseInt(values[0])
+      data.soldOut = values[1]
+      data.supply = parseInt(values[2])
+
+      if (conditionalPromises.coinbase) {
+        data.withdrawableBalance = web3.utils.toBN(values[3])
+      }
+
+      if (conditionalPromises.admins) {
+        let index = conditionalPromises.coinbase ? 4 : 3
+
+        data.oracleActive = values[index++]
+        data.oracleGasPrice = parseInt(values[index++])
+        data.oracleGasLimit = parseInt(values[index++])
+        data.oracleInterval = parseInt(values[index++])
+        data.oracleLastUpdate = parseInt(values[index]) * 1000
       }
 
       if (data.soldOut && pollSaleInterval !== null) clearInterval(pollSaleInterval)
 
       store.dispatch('pollSaleContract', data)
     } catch (error) {
+      console.log('pollSale:', error)
       Raven.captureException(error)
     }
   }

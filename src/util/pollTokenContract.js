@@ -1,33 +1,51 @@
 import Raven from 'raven-js'
-import Web3 from 'web3'
 import {store} from '../store/'
 
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
-
 const pollTokenContractFunction = async () => {
-  if (web3 && store.state.web3.web3Instance && store.state.tokenContractInstance !== null && store.state.web3.coinbase) {
+  let web3 = store.state.web3.web3Instance()
+
+  if (web3 && store.state.tokenContractInstance !== null && store.state.web3.coinbase) {
     try {
       let data = {}
-      let hadBalance = store.state.balance
+      let hadBalance = store.state.balance && store.state.balance.gt(0)
 
-      data.balance = new web3.BigNumber(await store.state.tokenContractInstance().balanceOf(store.state.web3.coinbase)).toNumber()
-      data.transferableTokens = new web3.BigNumber(await store.state.tokenContractInstance().transferableTokensOf(store.state.web3.coinbase)).toNumber()
-      data.lockedTokens = new web3.BigNumber(await store.state.tokenContractInstance().lockedTokensOf(store.state.web3.coinbase)).toNumber()
-
-      if (!store.state.mintingFinished) {
-        data.forceTransferEnable = await store.state.tokenContractInstance().forceTransferEnable()
-        data.mintingFinished = await store.state.tokenContractInstance().mintingFinished()
+      let conditionalPromises = {
+        minting: false
       }
 
-      if (!hadBalance && data.balance) {
+      let promises = [
+        store.state.tokenContractInstance().methods.balanceOf(store.state.web3.coinbase).call(),
+        store.state.tokenContractInstance().methods.transferableTokensOf(store.state.web3.coinbase).call(),
+        store.state.tokenContractInstance().methods.lockedTokensOf(store.state.web3.coinbase).call()
+      ]
+
+      if (!store.state.mintingFinished) {
+        conditionalPromises.minting = true
+        promises.push(store.state.tokenContractInstance().methods.forceTransferEnable().call())
+        promises.push(store.state.tokenContractInstance().methods.mintingFinished().call())
+      }
+
+      // Call all methods in parallel.
+      let values = await Promise.all(promises)
+
+      data.balance = web3.utils.toBN(values[0])
+      data.transferableTokens = web3.utils.toBN(values[1])
+      data.lockedTokens = web3.utils.toBN(values[2])
+
+      if (conditionalPromises.minting) {
+        data.forceTransferEnable = values[3]
+        data.mintingFinished = values[4]
+      }
+
+      if (!hadBalance && data.balance.gt(0)) {
         store.dispatch('setHelperProgress', ['mdapp', true])
-      } else if (hadBalance && !data.balance) {
+      } else if (hadBalance && !data.balance.gt(0)) {
         store.dispatch('setHelperProgress', ['mdapp', false])
       }
 
       store.dispatch('pollTokenContract', data)
     } catch (error) {
+      console.error('pollToken:', error)
       Raven.captureException(error)
     }
   }

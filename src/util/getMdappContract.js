@@ -1,33 +1,35 @@
-import Web3 from 'web3'
-import { default as contract } from 'truffle-contract'
+import Raven from 'raven-js'
 import contractArtifacts from '../../build/contracts/MDAPP'
 import {store} from '../store/'
 
-const getMdappContract = new Promise((resolve, reject) => {
-  let web3 = new Web3(window.web3.currentProvider)
-  let mdappContract = contract(contractArtifacts)
-  mdappContract.setProvider(web3.currentProvider)
-  resolve(mdappContract.deployed())
-})
+const getMdappContract = () => {
+  let web3 = store.state.web3.web3Instance()
+  return new web3.eth.Contract(contractArtifacts.abi, contractArtifacts.networks[store.state.web3.networkId].address)
+}
 
-const initMdappContract = () => {
-  return new Promise((resolve, reject) => {
+const initMdappContract = async () => {
+  try {
     const mdappContract = store.state.mdappContractInstance
     if (mdappContract === null) {
-      reject(new Error('MDAPP core contract not instantiated.'))
+      throw new Error('MDAPP core contract not instantiated.')
     }
 
-    Promise.all([
-      mdappContract().presaleAdStart(),
-      mdappContract().allAdStart(),
-      mdappContract().owner()]).then(values => {
-      resolve(store.dispatch('initMdappContract', {
-        adStartPresale: values[0].toNumber() * 1000,
-        adStartAll: values[1].toNumber() * 1000,
-        owner: values[2]
-      }))
+    let web3 = store.state.web3.web3Instance()
+
+    let values = await Promise.all([
+      mdappContract().methods.presaleAdStart().call(),
+      mdappContract().methods.allAdStart().call(),
+      mdappContract().methods.owner().call()])
+
+    store.dispatch('initMdappContract', {
+      adStartPresale: parseInt(values[0]) * 1000,
+      adStartAll: parseInt(values[1]) * 1000,
+      owner: web3.utils.toChecksumAddress(values[2])
     })
-  })
+  } catch (error) {
+    console.error('initMdappContract:', error)
+    Raven.captureException(error)
+  }
 }
 
 export { getMdappContract, initMdappContract }

@@ -64,15 +64,12 @@ export const store = new Vuex.Store({
     // Contract registration
     registerSaleContractInstance (state, payload) {
       state.saleContractInstance = () => payload
-      pollSaleContract()
     },
     registerMdappContractInstance (state, payload) {
       state.mdappContractInstance = () => payload
-      pollMdappContract()
     },
     registerTokenContractInstance (state, payload) {
       state.tokenContractInstance = () => payload
-      pollTokenContract()
     },
 
     // Contract constants initialization
@@ -142,9 +139,10 @@ export const store = new Vuex.Store({
         // Update allAds to have their isCurrentUser = false
         // Since it wasn't drawed yet, it will after we trigger the change.
         let adFromAll = state.allAds.get(ad.id)
-        adFromAll.isCurrentUser = false
-
-        triggerAllAds = true
+        if (adFromAll) {
+          adFromAll.isCurrentUser = false
+          triggerAllAds = true
+        }
       })
 
       // 2nd update myAds
@@ -306,43 +304,38 @@ export const store = new Vuex.Store({
   },
 
   actions: {
-    registerWeb3 ({commit, dispatch}) {
-      return new Promise((resolve, reject) => {
-        getWeb3.then(result => {
-          if (result.injectedWeb3) dispatch('setHelperProgress', ['metamask', true])
-          if (result.coinbase) dispatch('setHelperProgress', ['unlock', true])
-          if (result.balance && result.balance.gt(0)) dispatch('setHelperProgress', ['ether', true])
-          resolve(commit('registerWeb3Instance', result))
-        }).catch(e => reject(e))
-      })
+    async registerWeb3 ({commit, dispatch}) {
+      let result = await getWeb3()
+
+      // Set user progress for the helper component.
+      if (result.injectedWeb3) dispatch('setHelperProgress', ['metamask', true])
+      if (result.coinbase) dispatch('setHelperProgress', ['unlock', true])
+      if (result.balance && result.balance > '0') dispatch('setHelperProgress', ['ether', true])
+
+      // Store result
+      commit('registerWeb3Instance', result)
     },
     pollWeb3 ({commit}, payload) {
       commit('pollWeb3Instance', payload)
     },
 
     // Contract registration
-    getSaleContractInstance ({commit}) {
-      return new Promise((resolve, reject) => {
-        getSaleContract.then(result => {
-          commit('registerSaleContractInstance', result)
-          resolve(initSaleContract())
-        }).catch(e => reject(e))
-      })
+    async getSaleContractInstance ({commit}) {
+      let contract = getSaleContract()
+      commit('registerSaleContractInstance', contract)
+      await initSaleContract()
+      pollSaleContract()
     },
-    getMdappContractInstance ({commit}) {
-      return new Promise((resolve, reject) => {
-        getMdappContract.then(result => {
-          commit('registerMdappContractInstance', result)
-          resolve(initMdappContract())
-        }).catch(e => reject(e))
-      })
+    async getMdappContractInstance ({commit}) {
+      let result = await getMdappContract()
+      commit('registerMdappContractInstance', result)
+      await initMdappContract()
+      pollMdappContract()
     },
-    getTokenContractInstance ({commit}) {
-      return new Promise((resolve, reject) => {
-        getTokenContract.then(result => {
-          resolve(commit('registerTokenContractInstance', result))
-        }).catch(e => reject(e))
-      })
+    async getTokenContractInstance ({commit}) {
+      let result = await getTokenContract()
+      commit('registerTokenContractInstance', result)
+      pollTokenContract()
     },
 
     // Contract constants initialization

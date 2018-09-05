@@ -4,12 +4,11 @@
     <canvas id="canvasGrid" width="1251px" height="802px"></canvas>
 
     <canvas-popover ref="canvasPopover" targetEl="dummy-area" :show="popoverVisible" :buyPossible="buyPossible"
-                    :pixelPriceEth="this.$store.getters.pixelPriceEth" :selectedArea="selectedArea" :dummy="dummy" :collides="areaCollides"
+                    :selectedArea="selectedArea" :dummy="dummy" :collides="areaCollides"
                     v-on:buyBtnPressed="buyBtnPressed" v-on:hide="hidePopover" v-on:popover-created="popoverCreated"
                     v-on:finished="hidePopover" v-on:showTxLog="$emit('showTxLog')"/>
 
-    <modal-buy id="modalBuyPixels" :selectedTokenQty="missingTokens" :pixelPriceEth="this.$store.getters.pixelPriceEth"
-               :buyPossible="buyPossible" v-on:showTxLog="$emit('showTxLog')"/>
+    <modal-buy id="modalBuyPixels" :selectedTokenQty="missingTokens" :buyPossible="buyPossible" v-on:showTxLog="$emit('showTxLog')"/>
     <modal-ad :ad="selectedAd" v-on:showTxLog="$emit('showTxLog')" lazy/>
 
     <div id="tooltipAdContent" style="display: none;">
@@ -543,14 +542,12 @@ export default {
       if (this.myCanvasAds.has(adId)) {
         this.selectedAd = this.myCanvasAds.get(adId)
         clickedOnAd = true
-      }
 
-      if (!clickedOnAd) {
-        this.selectedAd = null
-      } else {
         this.hidePopover()
         this.showAdModal()
         this.clearCanvas()
+      } else {
+        this.selectedAd = null
       }
 
       return clickedOnAd

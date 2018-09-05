@@ -15,7 +15,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import Raven from 'raven-js'
 import RavenVue from 'raven-js/plugins/vue'
 
-if (process.env.NODE_ENV !== 'development' && false) {
+if (process.env.NODE_ENV !== 'development') {
   Raven
     .config(process.env.SENTRY_ENDPOINT, {
       'release': process.env.VUE_APP_SENTRY_RELEASE

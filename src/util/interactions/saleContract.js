@@ -1,256 +1,165 @@
-import Web3 from 'web3'
+import Raven from 'raven-js'
 import {store} from '../../store/'
 
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
-
 export default {
-  buy (beneficiary, tokenAmount, eth, recruiter) {
-    let wei = web3.toWei(eth)
-
-    return new Promise((resolve, reject) => {
+  async buy (beneficiary, tokenAmount, wei, recruiter) {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.buyTokens.estimateGas(beneficiary, tokenAmount, recruiter, {from: store.state.web3.coinbase, value: wei}, (error, gas) => {
-          if (error) reject(error)
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.buyTokens.sendTransaction(beneficiary, tokenAmount, recruiter, {from: store.state.web3.coinbase, value: wei, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.buyTokens(beneficiary, tokenAmount, recruiter).estimateGas({from: store.state.web3.coinbase, value: wei})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.buyTokens(beneficiary, tokenAmount, recruiter).send({from: store.state.web3.coinbase, value: wei, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('buy:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  activateOracle (eth) {
-    let wei = web3.toWei(eth)
-
-    return new Promise((resolve, reject) => {
+  async activateOracle (wei) {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.activateOracle.estimateGas({from: store.state.web3.coinbase, value: wei}, (error, gas) => {
-          if (error) reject(error)
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.activateOracle.sendTransaction({from: store.state.web3.coinbase, value: wei, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.activateOracle().estimateGas({from: store.state.web3.coinbase, value: wei})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.activateOracle().send({from: store.state.web3.coinbase, value: wei, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('activateOracle:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  withdrawBalance () {
-    return new Promise((resolve, reject) => {
+  async withdrawBalance () {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.withdrawPayments.estimateGas({from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
 
-          // Again wrong gas estimation with ganache.
-          let safeGas = Math.max(Math.round(((1.5 * 10) * gas) / 10), 100000)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.withdrawPayments.sendTransaction({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+      let gas = await store.state.saleContractInstance().methods.withdrawPayments().estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.withdrawPayments().send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('withdrawBalance:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  withdrawOracleFunds () {
-    return new Promise((resolve, reject) => {
+  async withdrawOracleFunds () {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.withdrawOracleFunds.estimateGas({from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
-          // Wrong Ganache gas estimation
-          let safeGas = Math.max(Math.round(((1.1 * 10) * gas) / 10), 150000)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.withdrawOracleFunds.sendTransaction({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.withdrawOracleFunds().estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.withdrawOracleFunds().send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('withdrawOracleFunds:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  setOracleGasPrice (gwei) {
+  async setOracleGasPrice (gwei) {
     let wei = gwei * 1000000000
-
-    return new Promise((resolve, reject) => {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setOracleGasPrice.estimateGas(wei, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setOracleGasPrice.sendTransaction(wei, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.setOracleGasPrice(wei).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.setOracleGasPrice(wei).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('setOracleGasPrice:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  setOracleGasLimit (gasLimit) {
-    return new Promise((resolve, reject) => {
+  async setOracleGasLimit (gasLimit) {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setOracleGasLimit.estimateGas(gasLimit, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setOracleGasLimit.sendTransaction(gasLimit, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.setOracleGasLimit(gasLimit).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.setOracleGasLimit(gasLimit).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('setOracleGasLimit:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  setOracleInterval (interval) {
-    return new Promise((resolve, reject) => {
+  async setOracleInterval (interval) {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setOracleInterval.estimateGas(interval, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setOracleInterval.sendTransaction(interval, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.setOracleInterval(interval).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.setOracleInterval(interval).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('setOracleInterval:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  setOracleQueryString (queryString) {
-    return new Promise((resolve, reject) => {
+  async setOracleQueryString (queryString) {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setOracleQueryString.estimateGas(queryString, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setOracleQueryString.sendTransaction(queryString, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.setOracleQueryString(queryString).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.setOracleQueryString(queryString).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('setOracleQueryString:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  setETHUSD (cents) {
-    return new Promise((resolve, reject) => {
+  async setETHUSD (cents) {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setEthUsd.estimateGas(cents, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.setEthUsd.sendTransaction(cents, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.setEthUsd(cents).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.setEthUsd(cents).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('setETHUSD:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  grantBounty (beneficiary, tokens, reason) {
-    return new Promise((resolve, reject) => {
+  async grantBounty (beneficiary, tokens, reason) {
+    try {
       if (store.state.saleContractInstance === null) {
-        reject(new Error('Sale contract not instantiated.'))
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.grantBounty.estimateGas(beneficiary, tokens, reason, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.saleContractInstance().contract.grantBounty.sendTransaction(beneficiary, tokens, reason, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+
+      let gas = await store.state.saleContractInstance().methods.grantBounty(beneficiary, tokens, reason).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.saleContractInstance().methods.grantBounty(beneficiary, tokens, reason).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('grantBounty:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   }
 }

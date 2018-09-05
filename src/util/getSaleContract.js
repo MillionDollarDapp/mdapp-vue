@@ -1,35 +1,37 @@
-import Web3 from 'web3'
-import { default as contract } from 'truffle-contract'
+import Raven from 'raven-js'
 import contractArtifacts from '../../build/contracts/MDAPPSale'
 import {store} from '../store/'
 
-const getSaleContract = new Promise((resolve, reject) => {
-  let web3 = new Web3(window.web3.currentProvider)
-  let saleContract = contract(contractArtifacts)
-  saleContract.setProvider(web3.currentProvider)
-  resolve(saleContract.deployed())
-})
+const getSaleContract = () => {
+  let web3 = window.web3
+  return new web3.eth.Contract(contractArtifacts.abi, contractArtifacts.networks[store.state.web3.networkId].address)
+}
 
-const initSaleContract = () => {
-  return new Promise((resolve, reject) => {
+const initSaleContract = async () => {
+  try {
     const saleContract = store.state.saleContractInstance
     if (saleContract === null) {
-      reject(new Error('Sale contract not instantiated.'))
+      throw new Error('Sale contract not instantiated.')
     }
 
-    Promise.all([
-      saleContract().startTimePresale(),
-      saleContract().endTimePresale(),
-      saleContract().startTimeSale(),
-      saleContract().wallet()]).then(values => {
-      resolve(store.dispatch('initSaleContract', {
-        startTimePresale: values[0].toNumber() * 1000,
-        endTimePresale: values[1].toNumber() * 1000,
-        startTimeSale: values[2].toNumber() * 1000,
-        wallet: values[3]
-      }))
+    let web3 = store.state.web3.web3Instance()
+
+    let values = await Promise.all([
+      saleContract().methods.startTimePresale().call(),
+      saleContract().methods.endTimePresale().call(),
+      saleContract().methods.startTimeSale().call(),
+      saleContract().methods.wallet().call()])
+
+    store.dispatch('initSaleContract', {
+      startTimePresale: parseInt(values[0]) * 1000,
+      endTimePresale: parseInt(values[1]) * 1000,
+      startTimeSale: parseInt(values[2]) * 1000,
+      wallet: web3.utils.toChecksumAddress(values[3])
     })
-  })
+  } catch (error) {
+    console.error('initSaleContract:', error)
+    Raven.captureException(error)
+  }
 }
 
 export { getSaleContract, initSaleContract }

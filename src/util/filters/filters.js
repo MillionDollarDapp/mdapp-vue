@@ -18,24 +18,27 @@ const filters = {
     this.initOtherAds()
   },
 
-  initUser () {
-    if (store.state.web3.block === null ||
-      store.state.mdappContractInstance === null ||
-      store.state.saleContractInstance === null) {
-      setTimeout(() => { this.initUser() }, 100)
-      return
-    }
+  async initUser () {
+    try {
+      if (store.state.web3.block === null ||
+        store.state.mdappContractInstance === null ||
+        store.state.saleContractInstance === null) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        await this.initUser()
+        return
+      }
 
-    if (!store.state.web3.coinbase) return
+      if (!store.state.web3.coinbase) return
 
-    // Set initBlock again, as this is important when the user changes his account. We want the new watchers
-    // to start in the present not in the past.
-    store.dispatch('setInitBlock', store.state.web3.block + 1)
+      // Set initBlock again, as this is important when the user changes his account. We want the new watchers
+      // to start in the present not in the past.
+      store.dispatch('setInitBlock', store.state.web3.block + 1)
 
-    Promise.all([
-      adFilter.getUserAds(),
-      saleFilter.getUserPurchases()
-    ]).then(values => {
+      let values = await Promise.all([
+        adFilter.getUserAds(),
+        saleFilter.getUserPurchases()
+      ])
+
       if (values[0].ads.size > 0) {
         store.dispatch('setHelperProgress', ['claim', true])
       }
@@ -51,35 +54,41 @@ const filters = {
       // Start watching.
       adFilter.watchUserAds()
       saleFilter.watchUser()
-    }).catch(e => {
-      Raven.captureException(e)
-    })
+    } catch (error) {
+      console.error('initUser:', error)
+      Raven.captureException(error)
+    }
   },
 
-  initOtherAds () {
-    if (store.state.web3.block === null ||
-      store.state.mdappContractInstance === null) {
-      setTimeout(() => { this.initOtherAds() }, 100)
-      return
-    }
+  async initOtherAds () {
+    try {
+      if (store.state.web3.block === null ||
+        store.state.mdappContractInstance === null) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+        await this.initOtherAds()
+        return
+      }
 
-    // Get current list of active ad ids. These ids need to be inited. Otherwise we have to crawl a huge history from
-    // past to present which might take quite a while.
-    (async () => {
-      let adIds = await store.state.mdappContractInstance().getAdIds()
+      // Get current list of active ad ids. These ids need to be inited. Otherwise we have to crawl a huge history from
+      // past to present which might take quite a while.
+      let adIds = await store.state.mdappContractInstance().methods.getAdIds().call()
 
-      Promise.all([
+      let values = await Promise.all([
         adFilter.getAllAds(adIds)
-      ]).then(values => {
-        store.dispatch('initAllAds', values[0])
+      ])
 
-        // Lookup block times
-        utils.setBlockTimes(values[0])
+      // Store all ads
+      store.dispatch('initAllAds', values[0])
 
-        // Start watching.
-        adFilter.watchAllAds()
-      })
-    })()
+      // Lookup block times
+      utils.setBlockTimes(values[0])
+
+      // Start watching.
+      adFilter.watchAllAds()
+    } catch (error) {
+      console.error('initOtherAds:', error)
+      Raven.captureException(error)
+    }
   },
 
   _storeUserTransactions (txs1, txs2) {

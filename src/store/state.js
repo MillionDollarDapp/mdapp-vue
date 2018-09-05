@@ -46,15 +46,15 @@ let state = {
   withdrawableBalance: 0,
   oracleActive: false,
   oracleLastUpdate: 0,
-  oracleFunds: 0,
+  oracleFunds: null,
   oracleGasPrice: 0,
   oracleGasLimit: 0,
   oracleInterval: 0,
 
   // Token contract variables
-  balance: 0,
-  transferableTokens: 0,
-  lockedTokens: 0,
+  balance: null,
+  transferableTokens: null,
+  lockedTokens: null,
   mintingFinished: false,
   forceTransferEnable: false,
 

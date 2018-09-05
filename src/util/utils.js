@@ -1,9 +1,5 @@
-import Web3 from 'web3'
 import multihashes from 'multihashes'
 import {store} from '../store/'
-
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
 
 /**
  * This file contains various helper functions.
@@ -137,7 +133,8 @@ const utils = {
   },
 
   multihash2image (hashFunction, digest, size, storageEngine) {
-    storageEngine = web3.toAscii(storageEngine)
+    let web3 = store.state.web3.web3Instance()
+    storageEngine = web3.utils.hexToAscii(storageEngine)
 
     if (storageEngine === 'ipfs') {
       hashFunction = hashFunction.substr(2)
@@ -154,17 +151,13 @@ const utils = {
    * @param ads a map of ads or a single ad object
    */
   setBlockTimes (ads) {
+    let web3 = store.state.web3.web3Instance()
     let blocks = new Map()
     let promises = []
 
     let getAdBlock = ad => {
       if (ad.block && !blocks.has(ad.block) && !store.state.web3.blockTimes.has(ad.block)) {
-        promises.push(new Promise((resolve, reject) => {
-          web3.eth.getBlock(ad.block, (error, block) => {
-            if (error) reject(error)
-            resolve(block)
-          })
-        }))
+        promises.push(web3.eth.getBlock(ad.block))
       }
     }
 

@@ -15,90 +15,61 @@ const adFilter = {
    * Call it once at app initialization or on coinbase changes.
    */
   async getUserAds () {
-    // TODO: call all filters asynchronously and merge once they all finished.
-
     // Will hold all current ads of the user. Ordering is not important.
     let ads = new Map()
 
     // Will hold all transactions which caused an event.
     let txs = new Map()
 
+    let claimPromise = store.state.mdappContractInstance().getPastEvents('Claim', {
+      filter: { owner: store.state.web3.coinbase },
+      fromBlock: process.env.DAPP_GENESIS,
+      toBlock: store.state.web3.block
+    })
+
+    let releasePromise = store.state.mdappContractInstance().getPastEvents('Release', {
+      filter: { owner: store.state.web3.coinbase },
+      fromBlock: process.env.DAPP_GENESIS,
+      toBlock: store.state.web3.block
+    })
+
+    let editPromise = store.state.mdappContractInstance().getPastEvents('EditAd', {
+      filter: { owner: store.state.web3.coinbase },
+      fromBlock: process.env.DAPP_GENESIS,
+      toBlock: store.state.web3.block
+    })
+
     try {
-      // 1st get all ad ids the current user ever had.
-      await new Promise((resolve, reject) => {
-        let claimFilter = store.state.mdappContractInstance().contract.Claim({
-          owner: store.state.web3.coinbase
-        }, {
-          fromBlock: process.env.START_BLOCK,
-          toBlock: store.state.web3.block
-        }).get((error, logs) => {
-          if (error) reject(error)
+      let values = await Promise.all([claimPromise, releasePromise, editPromise])
 
-          for (let key in logs) {
-            let log = logs[key]
-
-            if (!txs.has(log.blockNumber)) {
-              txs.set(log.blockNumber, [])
-            }
-
-            this._processInitLog(txs, ads, log)
-          }
-
-          claimFilter.stopWatching()
-          resolve()
-        })
-      })
+      // 1st process all claims the user ever made.
+      for (let key in values[0]) {
+        let log = values[0][key]
+        if (!txs.has(log.blockNumber)) {
+          txs.set(log.blockNumber, [])
+        }
+        this._processInitLog(txs, ads, log)
+      }
 
       // 2nd delete all ads the user released.
-      await new Promise((resolve, reject) => {
-        let releaseFilter = store.state.mdappContractInstance().contract.Release({
-          owner: store.state.web3.coinbase
-        }, {
-          fromBlock: process.env.START_BLOCK,
-          toBlock: store.state.web3.block
-        }).get((error, logs) => {
-          if (error) reject(error)
+      for (let key in values[1]) {
+        let log = values[1][key]
+        if (!txs.has(log.blockNumber)) {
+          txs.set(log.blockNumber, [])
+        }
+        this._processInitLog(txs, ads, log)
+      }
 
-          for (let key in logs) {
-            let log = logs[key]
-
-            if (!txs.has(log.blockNumber)) {
-              txs.set(log.blockNumber, [])
-            }
-
-            this._processInitLog(txs, ads, log)
-          }
-
-          releaseFilter.stopWatching()
-          resolve()
-        })
-      })
-
-      // 3rd refresh data of all current ads
-      await new Promise((resolve, reject) => {
-        let editAdFilter = store.state.mdappContractInstance().contract.EditAd({
-          owner: store.state.web3.coinbase
-        }, {
-          fromBlock: process.env.START_BLOCK,
-          toBlock: store.state.web3.block
-        }).get((error, logs) => {
-          if (error) reject(error)
-
-          for (let key in logs) {
-            let log = logs[key]
-
-            if (!txs.has(log.blockNumber)) {
-              txs.set(log.blockNumber, [])
-            }
-
-            this._processInitLog(txs, ads, log)
-          }
-
-          editAdFilter.stopWatching()
-          resolve()
-        })
-      })
+      // 3rd apply edits of all current ads
+      for (let key in values[2]) {
+        let log = values[2][key]
+        if (!txs.has(log.blockNumber)) {
+          txs.set(log.blockNumber, [])
+        }
+        this._processInitLog(txs, ads, log)
+      }
     } catch (error) {
+      console.error('getUserAds:', error)
       Raven.captureException(error)
     }
 
@@ -120,23 +91,24 @@ const adFilter = {
       block: log.blockNumber
     }
 
-    let adId = log.args.id.toNumber()
+    let values = log.returnValues
+    let adId = parseInt(values.id)
     let hasUploaded = store.state.helperProgress[5]
 
     switch (log.event) {
       case 'Claim':
-        tx.desc = `Claim ${log.args.width.toNumber() * log.args.height.toNumber() * 100} pixels.`
+        tx.desc = `Claim ${values.width * values.height * 100} pixels.`
 
         // Save ad data at index = id of ad
         ads.set(adId, {
           id: adId,
           block: log.blockNumber ? log.blockNumber : null,
           time: null,
-          x: log.args.x.toNumber() * 10,
-          y: log.args.y.toNumber() * 10,
-          width: log.args.width.toNumber() * 10,
-          height: log.args.height.toNumber() * 10,
-          owner: log.args.owner,
+          x: parseInt(values.x) * 10,
+          y: parseInt(values.y) * 10,
+          width: parseInt(values.width) * 10,
+          height: parseInt(values.height) * 10,
+          owner: values.owner,
           isCurrentUser: true,
           link: null,
           title: null,
@@ -169,16 +141,16 @@ const adFilter = {
           let ad = ads.get(adId)
           if (ad) {
             ad.block = log.blockNumber ? log.blockNumber : null
-            ad.link = log.args.link.substr(0, AD_MAXLENGTH.link).trim()
-            ad.title = utils.escapeHTML(log.args.title.substr(0, AD_MAXLENGTH.title).trim())
-            ad.text = utils.escapeHTML(log.args.text.substr(0, AD_MAXLENGTH.text).trim())
-            ad.contact = utils.escapeHTML(log.args.contact.substr(0, AD_MAXLENGTH.contact).trim())
-            ad.nsfw = log.args.NSFW
-            ad.image = utils.multihash2image(log.args.hashFunction, log.args.digest, log.args.size, log.args.storageEngine)
+            ad.link = values.link.substr(0, AD_MAXLENGTH.link).trim()
+            ad.title = utils.escapeHTML(values.title.substr(0, AD_MAXLENGTH.title).trim())
+            ad.text = utils.escapeHTML(values.text.substr(0, AD_MAXLENGTH.text).trim())
+            ad.contact = utils.escapeHTML(values.contact.substr(0, AD_MAXLENGTH.contact).trim())
+            ad.nsfw = values.NSFW
+            ad.image = utils.multihash2image(values.hashFunction, values.digest, values.size, values.storageEngine)
             ad.mh = {
-              hashFunction: log.args.hashFunction,
-              digest: log.args.digest,
-              size: log.args.size.toNumber()
+              hashFunction: values.hashFunction,
+              digest: values.digest,
+              size: parseInt(values.size)
             }
 
             if (!hasUploaded) {
@@ -187,7 +159,7 @@ const adFilter = {
             }
           }
         } catch (error) {
-          console.log('Edit ad:', adId)
+          console.error('Edit ad:', adId)
           Raven.captureException(error)
         }
         break
@@ -204,67 +176,83 @@ const adFilter = {
   watchUserAds () {
     if (this._claimFilter) {
       // Stop old filters
-      this._claimFilter.stopWatching()
-      this._releaseFilter.stopWatching()
-      this._editAdFilter.stopWatching()
+      this._claimFilter.unsubscribe()
+      this._releaseFilter.unsubscribe()
+      this._editAdFilter.unsubscribe()
     }
 
-    this._claimFilter = store.state.mdappContractInstance().contract.Claim({
-      owner: store.state.web3.coinbase
-    }, {
+    this._claimFilter = store.state.mdappContractInstance().events.Claim({
+      filter: { owner: store.state.web3.coinbase },
       fromBlock: store.state.initBlock,
-      toBlock: 'pending'
-    }).watch((error, log) => {
-      if (error) {
+      toBlock: 'latest'
+    })
+      .on('data', event => {
+        this._processWatchLog(event, 'user')
+      })
+      .on('change', event => {
+        Raven.captureMessage('A claim event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
         console.error('User claim watch:', error)
         Raven.captureException(error)
-        return
-      }
+      })
 
-      this._processWatchLog(log, 'user')
-    })
-
-    this._releaseFilter = store.state.mdappContractInstance().contract.Release({
-      owner: store.state.web3.coinbase
-    }, {
+    this._releaseFilter = store.state.mdappContractInstance().events.Release({
+      filter: { owner: store.state.web3.coinbase },
       fromBlock: store.state.initBlock,
-      toBlock: 'pending'
-    }).watch((error, log) => {
-      if (error) {
+      toBlock: 'latest'
+    })
+      .on('data', event => {
+        this._processWatchLog(event, 'user')
+      })
+      .on('change', event => {
+        Raven.captureMessage('A release event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
         console.error('User release watch:', error)
         Raven.captureException(error)
-        return
-      }
-      this._processWatchLog(log, 'user')
-    })
+      })
 
-    this._editAdFilter = store.state.mdappContractInstance().contract.EditAd({
-      owner: store.state.web3.coinbase
-    }, {
+    this._editAdFilter = store.state.mdappContractInstance().events.EditAd({
+      filter: { owner: store.state.web3.coinbase },
       fromBlock: store.state.initBlock,
       toBlock: 'pending'
-    }).watch((error, log) => {
-      if (error) {
+    })
+      .on('data', event => {
+        this._processWatchLog(event, 'user')
+      })
+      .on('change', event => {
+        Raven.captureMessage('An editAd event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
         console.error('User editAd watch:', error)
         Raven.captureException(error)
-        return
-      }
-      this._processWatchLog(log, 'user')
-    })
+      })
   },
 
   /**
    * Receives live event logs and processes them.
    */
   _processWatchLog (log, target) {
+    let values = log.returnValues
+
     // Is this about the current user?
-    let isUser = log.args.owner === store.state.web3.coinbase
+    let isUser = values.owner === store.state.web3.coinbase
 
     // To determine if we have to change the helper progress
     let hasClaimed = store.state.helperProgress[4]
     let hasUploaded = store.state.helperProgress[5]
 
-    let adId = log.args.id.toNumber()
+    let adId = parseInt(values.id)
     let ad = {}
 
     let tx = null
@@ -288,11 +276,11 @@ const adFilter = {
           id: adId,
           block: log.blockNumber ? log.blockNumber : null,
           time: null,
-          x: log.args.x.toNumber() * 10,
-          y: log.args.y.toNumber() * 10,
-          width: log.args.width.toNumber() * 10,
-          height: log.args.height.toNumber() * 10,
-          owner: log.args.owner,
+          x: parseInt(values.x) * 10,
+          y: parseInt(values.y) * 10,
+          width: parseInt(values.width) * 10,
+          height: parseInt(values.height) * 10,
+          owner: values.owner,
           isCurrentUser: isUser,
           link: null,
           title: null,
@@ -311,7 +299,7 @@ const adFilter = {
 
           // Set tx-description if it's new.
           if (tx.hasOwnProperty('dirty')) {
-            tx.desc = `Claim ${log.args.width.toNumber() * log.args.height.toNumber() * 100} pixels.`
+            tx.desc = `Claim ${values.width * values.height * 100} pixels.`
           }
         }
 
@@ -341,16 +329,16 @@ const adFilter = {
         try {
           if (ad) {
             ad.block = log.blockNumber ? log.blockNumber : null
-            ad.link = log.args.link.substr(0, AD_MAXLENGTH.link).trim()
-            ad.title = utils.escapeHTML(log.args.title.substr(0, AD_MAXLENGTH.title).trim())
-            ad.text = utils.escapeHTML(log.args.text.substr(0, AD_MAXLENGTH.text).trim())
-            ad.contact = utils.escapeHTML(log.args.contact.substr(0, AD_MAXLENGTH.contact).trim())
-            ad.nsfw = log.args.NSFW
-            ad.image = utils.multihash2image(log.args.hashFunction, log.args.digest, log.args.size, log.args.storageEngine)
+            ad.link = values.link.substr(0, AD_MAXLENGTH.link).trim()
+            ad.title = utils.escapeHTML(values.title.substr(0, AD_MAXLENGTH.title).trim())
+            ad.text = utils.escapeHTML(values.text.substr(0, AD_MAXLENGTH.text).trim())
+            ad.contact = utils.escapeHTML(values.contact.substr(0, AD_MAXLENGTH.contact).trim())
+            ad.nsfw = values.NSFW
+            ad.image = utils.multihash2image(values.hashFunction, values.digest, values.size, values.storageEngine)
             ad.mh = {
-              hashFunction: log.args.hashFunction,
-              digest: log.args.digest,
-              size: log.args.size.toNumber()
+              hashFunction: values.hashFunction,
+              digest: values.digest,
+              size: parseInt(values.size)
             }
 
             if (target === 'user' && !hasUploaded && ad.image) {
@@ -397,74 +385,45 @@ const adFilter = {
     let coinbase = store.state.web3.coinbase
 
     try {
+      // TODO: load a bootstrap json
       // 1st get claim events
-      // 'Release' can be avoided since we won't find such events for active ads.
-      await new Promise((resolve, reject) => {
-        let claimFilter = store.state.mdappContractInstance().contract.Claim({
-          id: adIds
-        }, {
-          fromBlock: process.env.START_BLOCK,
-          toBlock: store.state.web3.block
-        }).get((error, logs) => {
-          if (error) reject(error)
-
-          for (let key in logs) {
-            let log = logs[key]
-
-            let adId = log.args.id.toNumber()
-            this._processInitAllLog(ads, adId, coinbase, log)
-          }
-
-          claimFilter.stopWatching()
-          resolve()
-        })
+      // 'Release' can be avoided since we filter already for active ads.
+      let pastClaims = await store.state.mdappContractInstance().getPastEvents('Claim', {
+        filter: { id: adIds },
+        fromBlock: process.env.DAPP_GENESIS,
+        toBlock: store.state.web3.block
       })
+
+      for (let key in pastClaims) {
+        let log = pastClaims[key]
+        this._processInitAllLog(ads, parseInt(log.returnValues.id), coinbase, log)
+      }
 
       // 2nd get all edits of these ads.
-      await new Promise((resolve, reject) => {
-        let editAdFilter = store.state.mdappContractInstance().contract.EditAd({
-          id: adIds
-        }, {
-          fromBlock: process.env.START_BLOCK,
-          toBlock: store.state.web3.block
-        }).get((error, logs) => {
-          if (error) reject(error)
-
-          for (let key in logs) {
-            let log = logs[key]
-
-            let adId = log.args.id.toNumber()
-            this._processInitAllLog(ads, adId, coinbase, log)
-          }
-
-          editAdFilter.stopWatching()
-          resolve()
-        })
+      let pastEdits = await store.state.mdappContractInstance().getPastEvents('EditAd', {
+        filter: { id: adIds },
+        fromBlock: process.env.DAPP_GENESIS,
+        toBlock: store.state.web3.block
       })
 
-      // 4th get NSFWs
-      await new Promise((resolve, reject) => {
-        let nsfwFilter = store.state.mdappContractInstance().contract.ForceNSFW({
-          id: adIds
-        }, {
-          fromBlock: process.env.START_BLOCK,
-          toBlock: store.state.web3.block
-        }).get((error, logs) => {
-          if (error) reject(error)
+      for (let key in pastEdits) {
+        let log = pastEdits[key]
+        this._processInitAllLog(ads, parseInt(log.returnValues.id), coinbase, log)
+      }
 
-          for (let key in logs) {
-            let log = logs[key]
-
-            let adId = log.args.id.toNumber()
-            if (ads.has(adId)) {
-              store.dispatch('forceNSFW', adId)
-            }
-          }
-
-          nsfwFilter.stopWatching()
-          resolve()
-        })
+      // 3th get NSFWs
+      let pastNSFWs = await store.state.mdappContractInstance().getPastEvents('ForceNSFW', {
+        filter: { id: adIds },
+        fromBlock: process.env.DAPP_GENESIS,
+        toBlock: store.state.web3.block
       })
+
+      for (let key in pastNSFWs) {
+        let log = pastNSFWs[key]
+        if (ads.has(log.returnValues.id)) {
+          store.dispatch('forceNSFW', parseInt(log.returnValues.id))
+        }
+      }
     } catch (error) {
       console.error('getAllAds:', error)
       Raven.captureException(error)
@@ -475,74 +434,97 @@ const adFilter = {
 
   watchAllAds () {
     // Claim watching
-    store.state.mdappContractInstance().contract.Claim({}, {
+    store.state.mdappContractInstance().events.Claim({
       fromBlock: store.state.initBlock,
       toBlock: 'latest'
-    }).watch((error, log) => {
-      if (error) {
-        console.error('All claim watch:', error)
-        Raven.captureException(error)
-        return
-      }
-
-      this._processWatchLog(log, 'all')
     })
+      .on('data', event => {
+        this._processWatchLog(event, 'all')
+      })
+      .on('changed', event => {
+        Raven.captureMessage('A claim event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
+        console.error('Other watch claim:', error)
+        Raven.captureException(error)
+      })
 
     // Release watching
-    store.state.mdappContractInstance().contract.Release({}, {
+    store.state.mdappContractInstance().events.Release({
       fromBlock: store.state.initBlock,
       toBlock: 'latest'
-    }).watch((error, log) => {
-      if (error) {
-        console.error('All release watch:', error)
-        Raven.captureException(error)
-        return
-      }
-
-      this._processWatchLog(log, 'all')
     })
+      .on('data', event => {
+        this._processWatchLog(event, 'all')
+      })
+      .on('changed', event => {
+        Raven.captureMessage('A release event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
+        console.error('Other watch release:', error)
+        Raven.captureException(error)
+      })
 
     // EditAd watching
-    store.state.mdappContractInstance().contract.EditAd({}, {
+    store.state.mdappContractInstance().events.EditAd({
       fromBlock: store.state.initBlock,
       toBlock: 'latest'
-    }).watch((error, log) => {
-      if (error) {
-        console.error('All editAd watch:', error)
-        Raven.captureException(error)
-        return
-      }
-
-      this._processWatchLog(log, 'all')
     })
+      .on('data', event => {
+        this._processWatchLog(event, 'all')
+      })
+      .on('changed', event => {
+        Raven.captureMessage('An edit event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
+        console.error('Other watch editAd:', error)
+        Raven.captureException(error)
+      })
 
     // ForceNSFW watching
-    store.state.mdappContractInstance().contract.ForceNSFW({}, {
+    store.state.mdappContractInstance().events.ForceNSFW({
       fromBlock: store.state.initBlock,
       toBlock: 'pending'
-    }).watch((error, log) => {
-      if (error) {
-        Raven.captureException(error)
-        return
-      }
-
-      store.dispatch('forceNSFW', log.args.id.toNumber())
     })
+      .on('data', event => {
+        store.dispatch('forceNSFW', parseInt(event.returnValues.id))
+      })
+      .on('changed', event => {
+        Raven.captureMessage('An ForceNSFW event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
+        console.error('Other watch forceNSFW:', error)
+        Raven.captureException(error)
+      })
   },
 
   _processInitAllLog (ads, adId, coinbase, log) {
+    let values = log.returnValues
+
     switch (log.event) {
       case 'Claim':
         ads.set(adId, {
           id: adId,
           block: log.blockNumber ? log.blockNumber : null,
           time: null,
-          x: log.args.x.toNumber() * 10,
-          y: log.args.y.toNumber() * 10,
-          width: log.args.width.toNumber() * 10,
-          height: log.args.height.toNumber() * 10,
-          owner: log.args.owner,
-          isCurrentUser: log.args.owner === coinbase,
+          x: parseInt(values.x) * 10,
+          y: parseInt(values.y) * 10,
+          width: parseInt(values.width) * 10,
+          height: parseInt(values.height) * 10,
+          owner: values.owner,
+          isCurrentUser: values.owner === coinbase,
           link: null,
           title: null,
           text: null,
@@ -562,16 +544,16 @@ const adFilter = {
           let ad = ads.get(adId)
           if (ad) {
             ad.block = log.blockNumber ? log.blockNumber : null
-            ad.link = log.args.link.substr(0, AD_MAXLENGTH.link).trim()
-            ad.title = utils.escapeHTML(log.args.title.substr(0, AD_MAXLENGTH.title).trim())
-            ad.text = utils.escapeHTML(log.args.text.substr(0, AD_MAXLENGTH.text).trim())
-            ad.contact = utils.escapeHTML(log.args.contact.substr(0, AD_MAXLENGTH.contact).trim())
-            ad.nsfw = log.args.NSFW
-            ad.image = utils.multihash2image(log.args.hashFunction, log.args.digest, log.args.size, log.args.storageEngine)
+            ad.link = values.link.substr(0, AD_MAXLENGTH.link).trim()
+            ad.title = utils.escapeHTML(values.title.substr(0, AD_MAXLENGTH.title).trim())
+            ad.text = utils.escapeHTML(values.text.substr(0, AD_MAXLENGTH.text).trim())
+            ad.contact = utils.escapeHTML(values.contact.substr(0, AD_MAXLENGTH.contact).trim())
+            ad.nsfw = values.NSFW
+            ad.image = utils.multihash2image(values.hashFunction, values.digest, values.size, values.storageEngine)
             ad.mh = {
-              hashFunction: log.args.hashFunction,
-              digest: log.args.digest,
-              size: log.args.size.toNumber()
+              hashFunction: values.hashFunction,
+              digest: values.digest,
+              size: parseInt(values.size)
             }
           }
         } catch (error) {

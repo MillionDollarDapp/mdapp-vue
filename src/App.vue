@@ -16,6 +16,7 @@
 </template>
 
 <script>
+import Raven from 'raven-js'
 import filters from './util/filters/filters'
 import HelperList from '@/components/helperList'
 import Navbar from '@/components/navbar'
@@ -24,15 +25,19 @@ export default {
   name: 'App',
   beforeCreate () {
     (async () => {
-      await this.$store.dispatch('registerWeb3')
+      try {
+        await this.$store.dispatch('registerWeb3')
+        await Promise.all([
+          this.$store.dispatch('getSaleContractInstance'),
+          this.$store.dispatch('getMdappContractInstance'),
+          this.$store.dispatch('getTokenContractInstance')
+        ])
 
-      Promise.all([
-        this.$store.dispatch('getSaleContractInstance'),
-        this.$store.dispatch('getMdappContractInstance'),
-        this.$store.dispatch('getTokenContractInstance')
-      ]).then(() => {
         filters.init()
-      })
+      } catch (error) {
+        console.error('App beforeCreate:', error)
+        Raven.captureException(error)
+      }
     })()
   },
   components: {
@@ -47,7 +52,7 @@ export default {
       showNSFW: false,
 
       missingTokens: 0,
-      pixelPriceEth: 0,
+      pixelPriceWei: 0,
       buyPossible: false
     }
   },

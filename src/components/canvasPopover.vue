@@ -134,7 +134,7 @@
               <b-col md="auto">Price per pixel:</b-col><b-col md="auto" class="text-right">$1 ({{ pixelPriceEth.toFixed(8) }} ETH)</b-col>
             </b-row>
             <b-row align-h="between">
-              <b-col md="auto">Total cost:</b-col><b-col md="auto" class="text-right">${{ selectedArea.getTokenQty() * 100 }} ({{ (((pixelPriceEth * 1e8) * selectedArea.getTokenQty() * 100) / 1e8).toFixed(8) }} ETH)</b-col>
+              <b-col md="auto">Total cost:</b-col><b-col md="auto" class="text-right">${{ selectedArea.getTokenQty() * 100 }} ({{ costEth.toFixed(8) }} ETH)</b-col>
             </b-row>
             <b-row>
               <b-col class="text-center"><b-button variant="success" :disabled="!buyPossible" @click="buyBtnPressed">Buy {{ missingTokens }} MDAPP Token(s)</b-button></b-col>
@@ -169,7 +169,6 @@ export default {
     buyPossible: Boolean,
     collides: Boolean,
     dummy: Object,
-    pixelPriceEth: Number,
     show: Boolean,
     selectedArea: Object,
     targetEl: String
@@ -206,6 +205,18 @@ export default {
 
     missingTokens () {
       return this.selectedArea.getTokenQty() - this.$store.getters.unlockedTokens
+    },
+
+    pixelPriceEth () {
+      return Number(this.web3.utils.fromWei(this.$store.getters.pixelPriceWei, 'ether'))
+    },
+    costEth () {
+      // Total cost in ETH
+      return Number(this.web3.utils.fromWei(this.$store.getters.pixelPriceWei.mul(this.web3.utils.toBN(100 * this.selectedArea.getTokenQty())), 'ether'))
+    },
+
+    web3 () {
+      return this.$store.state.web3.web3Instance()
     }
   },
 
@@ -266,31 +277,18 @@ export default {
     buyBtnPressed () {
       this.$emit('buyBtnPressed')
     },
-    claimBtnPressed () {
+    async claimBtnPressed () {
       // TODO: Can this be rewritten with async/await somehow?
       let x = this.selectedArea.topLeft[0]
       let y = this.selectedArea.topLeft[1]
       let w = this.selectedArea.getWidth()
       let h = this.selectedArea.getHeight()
-      mdappContract.claim(x, y, w, h)
-        .then((txHash, err) => {
-          if (err) {
-            Raven.captureException(err)
-            let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
-            this.$swal({
-              type: 'error',
-              title: 'Error',
-              html: msg,
-              showConfirmButton: false
-            })
-            newTransaction(txHash, 'claim', {
-              x: x,
-              y: y,
-              width: w,
-              height: h,
-              error: msg
-            }, 'error')
-          } else {
+
+      try {
+        let [error, tx] = await mdappContract.claim(x, y, w, h)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
             this.$swal({
               type: 'success',
               title: 'Transaction sent',
@@ -300,27 +298,26 @@ export default {
                 this.$emit('showTxLog')
               }
             })
-            newTransaction(txHash, 'claim', {
-              x: x,
-              y: y,
-              width: w,
-              height: h
-            }, 'pending')
-          }
-          this.$emit('finished')
-        }).catch(e => {
-          Raven.captureException(e)
-          let msg = e.message
-          if (msg.indexOf('User denied transaction signature') === -1) {
-            this.$swal({
-              type: 'error',
-              title: 'Error',
-              html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
-              showConfirmButton: false
-            })
-          }
-          this.$emit('finished')
-        })
+            newTransaction(txHash, 'claim', {x: x, y: y, width: w, height: h}, 'pending')
+            this.$emit('finished')
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('claimBtnPressed:', error)
+          Raven.captureException(error)
+
+          this.$swal({
+            type: 'error',
+            title: 'Error',
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
+            showConfirmButton: false
+          })
+        }
+      }
     }
   }
 }

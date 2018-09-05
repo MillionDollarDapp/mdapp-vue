@@ -1,11 +1,8 @@
-import Web3 from 'web3'
-import { default as contract } from 'truffle-contract'
 import contractArtifacts from '../../build/contracts/MDAPPToken'
+import { store } from '../store'
 
-const getTokenContract = new Promise((resolve, reject) => {
-  let web3 = new Web3(window.web3.currentProvider)
-  let tokenContract = contract(contractArtifacts)
-  tokenContract.setProvider(web3.currentProvider)
-  resolve(tokenContract.deployed())
-})
+const getTokenContract = () => {
+  let web3 = window.web3
+  return new web3.eth.Contract(contractArtifacts.abi, contractArtifacts.networks[store.state.web3.networkId].address)
+}
 export default getTokenContract

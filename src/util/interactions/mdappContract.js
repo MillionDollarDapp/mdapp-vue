@@ -1,147 +1,92 @@
-import Web3 from 'web3'
+import Raven from 'raven-js'
 import {store} from '../../store/'
-
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
 
 export default {
   // Only contract owner can force-allow tranferability of tokens.
-  allowTransfer () {
-    return new Promise((resolve, reject) => {
-      if (!web3 || !store.state.web3.web3Instance || store.state.mdappContractInstance === null) {
-        reject(new Error('MDAPP core contract not instantiated.'))
+  async allowTransfer () {
+    try {
+      if (store.state.saleContractInstance === null) {
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.mdappContractInstance().contract.allowTransfer.estimateGas({from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
 
-          // Set max gas to 10% above the estimated usage - just in case...
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.mdappContractInstance().contract.allowTransfer({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+      let gas = await store.state.mdappContractInstance().methods.allowTransfer().estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.mdappContractInstance().methods.allowTransfer().send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('allowTransfer:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  claim (x, y, width, height) {
-    return new Promise((resolve, reject) => {
-      if (!web3 || !store.state.web3.web3Instance || store.state.mdappContractInstance === null) {
-        reject(new Error('MDAPP core contract not instantiated.'))
+  async claim (x, y, width, height) {
+    try {
+      if (store.state.saleContractInstance === null) {
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        x = x / 10
-        y = y / 10
-        width = width / 10
-        height = height / 10
 
-        store.state.mdappContractInstance().contract.claim.estimateGas(x, y, width, height, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
+      x = x / 10
+      y = y / 10
+      width = width / 10
+      height = height / 10
 
-          // Set max gas to 10% above the estimated usage - just in case...
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.mdappContractInstance().contract.claim(x, y, width, height, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+      let gas = await store.state.mdappContractInstance().methods.claim(x, y, width, height).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.mdappContractInstance().methods.claim(x, y, width, height).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('claim:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  release (adId) {
-    return new Promise((resolve, reject) => {
-      if (!web3 || !store.state.web3.web3Instance || store.state.mdappContractInstance === null) {
-        reject(new Error('MDAPP core contract not instantiated.'))
+  async release (adId) {
+    try {
+      if (store.state.saleContractInstance === null) {
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    // }).then(() => {
-    //   return 1000000
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.mdappContractInstance().contract.release.estimateGas(adId, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
 
-          // Set max gas to 50% above the estimated usage, but at least 200k - this method seems to be tricky to estimate.
-          let safeGas = Math.max(Math.round(((1.1 * 10) * gas) / 10), 200000)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.mdappContractInstance().contract.release(adId, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+      let gas = await store.state.mdappContractInstance().methods.release(adId).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.mdappContractInstance().methods.release(adId).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('release:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  editAd (adId, link, title, text, contact, nsfw, digest, hashFunction, size, storageEnginge) {
-    return new Promise((resolve, reject) => {
-      if (!web3 || !store.state.web3.web3Instance || store.state.mdappContractInstance === null) {
-        reject(new Error('MDAPP core contract not instantiated.'))
+  async editAd (adId, link, title, text, contact, nsfw, digest, hashFunction, size, storageEnginge) {
+    try {
+      if (store.state.saleContractInstance === null) {
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        // Default values
-        storageEnginge = storageEnginge === undefined ? web3.fromAscii('ipfs') : web3.fromAscii(storageEnginge)
-        store.state.mdappContractInstance().contract.editAd.estimateGas(adId, link, title, text, contact, nsfw, digest, hashFunction, size, storageEnginge, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
+      let web3 = store.state.web3.web3Instance()
 
-          // Set max gas to 10% above the estimated usage - just in case...
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.mdappContractInstance().contract.editAd(adId, link, title, text, contact, nsfw, digest, hashFunction, size, storageEnginge, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+      storageEnginge = storageEnginge === undefined ? web3.utils.asciiToHex('ipfs') : web3.utils.asciiToHex(storageEnginge)
+      let gas = await store.state.mdappContractInstance().methods.editAd(adId, link, title, text, contact, nsfw, digest, hashFunction, size, storageEnginge).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.mdappContractInstance().methods.editAd(adId, link, title, text, contact, nsfw, digest, hashFunction, size, storageEnginge).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('editAd:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   },
 
-  forceNSFW (adId) {
-    return new Promise((resolve, reject) => {
-      if (!web3 || !store.state.web3.web3Instance || store.state.mdappContractInstance === null) {
-        reject(new Error('MDAPP core contract not instantiated.'))
+  async forceNSFW (adId) {
+    try {
+      if (store.state.saleContractInstance === null) {
+        throw new Error('Sale contract not instantiated.')
       }
-      resolve()
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        store.state.mdappContractInstance().contract.forceNSFW.estimateGas(adId, {from: store.state.web3.coinbase}, (error, gas) => {
-          if (error) reject(error)
 
-          // Set max gas to 10% above the estimated usage - just in case...
-          let safeGas = Math.round(((1.1 * 10) * gas) / 10)
-          resolve(safeGas)
-        })
-      })
-    }).then(safeGas => {
-      return new Promise((resolve, reject) => {
-        store.state.mdappContractInstance().contract.forceNSFW(adId, {from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice}, (error, txHash) => {
-          if (error) reject(error)
-          resolve(txHash)
-        })
-      })
-    })
+      let gas = await store.state.mdappContractInstance().methods.forceNSFW(adId).estimateGas({from: store.state.web3.coinbase})
+      let safeGas = Math.round(((1.1 * 10) * gas) / 10)
+      return [null, store.state.mdappContractInstance().methods.forceNSFW(adId).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
+    } catch (error) {
+      console.error('forceNSFW:', error)
+      Raven.captureException(error)
+      return [error, null]
+    }
   }
 }

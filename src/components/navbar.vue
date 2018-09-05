@@ -18,8 +18,8 @@
             </b-button>
 
             <b-row align-h="end" class="highlight ml-auto">
-              <template v-if="web3.isInjected">
-                <template v-if="this.$store.state.web3.coinbase">
+              <template v-if="web3Data.isInjected">
+                <template v-if="web3Data.coinbase">
                   <b-col>
                     <user-icon/>
                     <b-nav-text>{{ $store.getters.coinbaseShort }}</b-nav-text>
@@ -27,7 +27,7 @@
                   <!-- Balances -->
                   <b-col md="auto">
                     <b-nav-text>
-                      <b-badge v-b-tooltip.hover :title="'Exchange rate: $' + this.$store.state.ethusd / 100">{{ web3.balanceEth }} ETH</b-badge>
+                      <b-badge v-b-tooltip.hover :title="'Exchange rate: $' + this.$store.state.ethusd / 100">{{ web3Data.balanceEth }} ETH</b-badge>
                     </b-nav-text>
                   </b-col>
                   <b-col md="auto" class="p-0 icon-col"><arrow-right-icon/></b-col>
@@ -45,7 +45,7 @@
                   </b-col>
                 </template>
                 <!-- NSFW Toggle -->
-                <b-col md="auto" :class="web3.coinbase ? 'mx-0 px-0' : ''" v-if="this.$store.state.trigger.forceNSFW && (this.$store.state.forceNSFW.size > 0 || this.$store.state.adsWithNSFW > 0)">
+                <b-col md="auto" :class="web3Data.coinbase ? 'mx-0 px-0' : ''" v-if="this.$store.state.trigger.forceNSFW && (this.$store.state.forceNSFW.size > 0 || this.$store.state.adsWithNSFW > 0)">
                   <b-nav-text>
                     <toggle-button :value="false" :labels="{checked: 'Yes', unchecked: 'No'}"
                                    :color="{checked: '#48ce60', unchecked: '#d84343', disabled: '#CCCCCC'}"
@@ -54,7 +54,7 @@
                   </b-nav-text>
                 </b-col>
                 <!-- Transactions log -->
-                <b-col md="auto" class="px-0" v-if="web3.coinbase">
+                <b-col md="auto" class="px-0" v-if="web3Data.coinbase">
                   <b-dropdown variant="link" ref="txLogDropdown" no-caret right class="tx-dropdown">
                     <template slot="button-content">
                       <activity-icon v-b-tooltip.hover title="Transactions log"/>
@@ -77,7 +77,7 @@
                   </b-dropdown>
                 </b-col>
               </template>
-              <template v-if="!web3.isInjected || !web3.coinbase">
+              <template v-if="!web3Data.isInjected || !web3Data.coinbase">
                 <b-col md="auto"><user-icon/> <b-nav-text>Please install and unlock <a href="https://metamask.io/" target="_blank">Metamask</a></b-nav-text></b-col>
               </template>
             </b-row>
@@ -88,14 +88,14 @@
         <div class="d-flex justify-content-start text-white sub-nav">
           <!--<div class="slogan text-white-50 ml-3">...be part of history!</div>-->
           <div class="flex-grow-1 d-flex justify-content-end sub-nav-right text-white-50">
-            <template v-if="web3.coinbase">
+            <template v-if="web3Data.coinbase">
               <template v-if="!this.$store.state.soldOut">
                 <div class="mr-2">Your referral code:</div>
                 <div class="mr-2">{{ referral }}</div>
                 <div class="mr-2"><file-text-icon id="copyReferralBtn" class="link" v-b-tooltip.hover title="Copy to clipboard" @click="copyToClipboard"/></div>
               </template>
               <div v-if="!this.$store.state.soldOut || (this.$store.state.withdrawableBalance !== 0 && this.$store.state.withdrawableBalance.gt(0))">
-                <b-badge v-if="this.$store.state.withdrawableBalance === 0 || this.$store.state.withdrawableBalance.eq(0)"
+                <b-badge v-if="!this.$store.state.withdrawableBalance || this.$store.state.withdrawableBalance.eq(this.web3.utils.toBN(0))"
                          v-b-tooltip.hover title="Share your referral code to get 10% of all ETH spent at purchases of MDAPP using your code.">{{ 0 }} ETH</b-badge>
                 <b-badge v-else class="link" @click="withdrawReferralBalance" v-b-tooltip.hover title="Click to withdraw your referral balance">{{ this.$store.getters.withdrawableBalanceEthShort }} ETH</b-badge>
               </div>
@@ -105,7 +105,7 @@
       </div>
     </div>
 
-    <modal-buy id="modalBuyNav" :selectedTokenQty="1" :pixelPriceEth="this.$store.getters.pixelPriceEth" :buyPossible="buyPossible" v-on:showTxLog="$refs.txLogDropdown.visible = true"/>
+    <modal-buy id="modalBuyNav" :selectedTokenQty="1" :pixelPriceEth="this.$store.getters.pixelPriceWei" :buyPossible="buyPossible" v-on:showTxLog="$refs.txLogDropdown.visible = true"/>
   </b-navbar>
 </template>
 
@@ -143,8 +143,11 @@ export default {
   },
 
   computed: {
-    web3 () {
+    web3Data () {
       return this.$store.state.web3
+    },
+    web3 () {
+      return this.$store.state.web3.web3Instance()
     },
     transactions () {
       // Conditions is always true and is only used to trigger a recalculation.
@@ -166,7 +169,7 @@ export default {
       }
       prefix += '?r='
 
-      return prefix + utils.address2Referral(this.web3.coinbase)
+      return prefix + utils.address2Referral(this.web3Data.coinbase)
     }
   },
 

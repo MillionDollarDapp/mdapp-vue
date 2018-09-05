@@ -1,70 +1,59 @@
 import Raven from 'raven-js'
-import Web3 from 'web3'
 import {store} from '../store/'
 
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
-
 const pollWeb3Function = async () => {
-  if (web3 && store.state.web3.web3Instance) {
+  let web3 = store.state.web3.web3Instance()
+
+  if (web3) {
     let hadCoinbase = store.state.web3.coinbase
     let hadEther = store.state.web3.balance && store.state.web3.balance.gt(0)
 
     try {
-      let data = {}
-      if (store.state.web3.isInjected) {
-        data = { coinbase: web3.eth.coinbase }
-      }
+      let data = { coinbase: store.state.web3.isInjected ? web3.utils.toChecksumAddress(await web3.eth.getCoinbase()) : null }
 
       if (data.coinbase) {
         if (!hadCoinbase) store.dispatch('setHelperProgress', ['unlock', true])
 
-        // TODO: rewrite to solve promises with Promise.all
-        data.balance = await new Promise((resolve, reject) => {
-          web3.eth.getBalance(data.coinbase, (err, polledBalance) => {
-            if (err) reject(err)
+        let conditionalPromises = {
+          oracle: false
+        }
+        let promises = []
+        promises.push(web3.eth.getBalance(data.coinbase))
+        promises.push(web3.eth.getGasPrice())
 
-            if (!hadEther && polledBalance.gt(0)) {
-              store.dispatch('setHelperProgress', ['ether', true])
-            } else if (hadEther && polledBalance.lt(1)) {
-              store.dispatch('setHelperProgress', ['ether', false])
-            }
-            resolve(polledBalance)
-          })
-        })
-        data.balanceEth = Number(web3.fromWei(data.balance)).toFixed(3)
+        if ((data.coinbase === store.state.owner || data.coinbase === store.state.wallet) &&
+          store.state.saleContractInstance !== null) {
+          // Query balance of sale contract.
+          conditionalPromises.oracle = true
+          promises.push(web3.eth.getBalance(store.state.saleContractInstance().options.address))
+        }
 
-        data.gasPrice = await new Promise((resolve, reject) => {
-          web3.eth.getGasPrice((err, gasPrice) => {
-            if (err) reject(err)
-            resolve(gasPrice)
-          })
-        })
+        // Call all methods in parallel.
+        let values = await Promise.all(promises)
 
-        // Get sale contract balance for admin and wallet owner
-        if (data.coinbase === store.state.owner || data.coinbase === store.state.wallet) {
-          if (store.state.saleContractInstance !== null) {
-            data.oracleFunds = await new Promise((resolve, reject) => {
-              web3.eth.getBalance(store.state.saleContractInstance().contract.address, (err, oracleFunds) => {
-                if (err) reject(err)
-                resolve(oracleFunds)
-              })
-            })
-          }
+        data.balance = web3.utils.toBN(values[0])
+        data.balanceEth = Number(web3.utils.fromWei(data.balance, 'ether')).toFixed(3)
+        data.gasPrice = web3.utils.toBN(values[1])
+
+        if (conditionalPromises.oracle) {
+          data.oracleFunds = web3.utils.toBN(values[2])
+        }
+
+        // Set helper progress based on balance.
+        if (!hadEther && data.balance.gt(0)) {
+          store.dispatch('setHelperProgress', ['ether', true])
+        } else if (hadEther && data.balance.lt(1)) {
+          store.dispatch('setHelperProgress', ['ether', false])
         }
       } else {
         if (hadCoinbase) store.dispatch('setHelperProgress', ['unlock', false])
       }
 
-      data.block = await new Promise((resolve, reject) => {
-        web3.eth.getBlockNumber((err, block) => {
-          if (err) reject(err)
-          resolve(block)
-        })
-      })
+      data.block = await web3.eth.getBlockNumber()
 
       store.dispatch('pollWeb3', data)
     } catch (error) {
+      console.error('pollWeb3:', error)
       Raven.captureException(error)
     }
   }

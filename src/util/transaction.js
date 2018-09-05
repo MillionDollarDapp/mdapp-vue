@@ -1,9 +1,5 @@
 import Raven from 'raven-js'
-import Web3 from 'web3'
 import {store} from '../store/'
-
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
 
 /**
  * Adds a new transaction to our store.
@@ -105,20 +101,17 @@ const newTransaction = (hash, op, data, status) => {
  *
  * @param hash of the transaction
  */
-const watchTransaction = (tx) => {
-  web3.eth.getTransactionReceipt(tx.hash, (err, receipt) => {
-    if (err) {
-      console.error('Watch transaction:', tx, err)
-      Raven.captureException(err)
-      return
-    }
+const watchTransaction = async (tx) => {
+  try {
+    let web3 = store.state.web3.web3Instance()
+    let receipt = await web3.eth.getTransactionReceipt(tx.hash)
 
     let continueWatching = true
     if (receipt !== null) {
       let confirmations = receipt.blockNumber === null ? 0 : store.state.web3.block - receipt.blockNumber + 1
       tx.block = receipt.blockNumber
 
-      if (receipt.status === '0x1') {
+      if (receipt.status) {
         // Transaction succeeded
         if (confirmations >= process.env.CONFIRMATIONS) {
           tx.status = 'completed'
@@ -131,7 +124,7 @@ const watchTransaction = (tx) => {
         continueWatching = false
         tx.status = 'error'
 
-        // TODO: use error string once https://github.com/ethereum/web3.js/issues/1707 is implemented and available to metamask.
+        // TODO: use error string once https://github.com/ethereum/web3.js/issues/1707 is implemented
         tx.error = 'Reverted by smart contract.'
       }
     }
@@ -142,7 +135,10 @@ const watchTransaction = (tx) => {
     } else {
       store.dispatch('unwatchTransaction', tx)
     }
-  })
+  } catch (error) {
+    console.error('watchTransaction:', error)
+    Raven.captureException(error)
+  }
 }
 
 export { newTransaction, watchTransaction }
