@@ -144,6 +144,7 @@
 <script>
 import Vue from 'vue'
 import Raven from 'raven-js'
+import fileType from 'file-type'
 import { Croppie } from 'croppie'
 import { DownloadIcon, Trash2Icon } from 'vue-feather-icons'
 
@@ -360,32 +361,43 @@ export default {
         api.download(this.ad.image)
           .then(response => {
             // Request done
-            let reader = new FileReader()
-            reader.onload = e => {
-              // Filereader done
+            let arrayBufferReader = new FileReader()
+            let dataURLReader = new FileReader()
+            let mimeType = ''
 
+            // Validate file type.
+            arrayBufferReader.onload = e => {
+              mimeType = fileType(e.target.result)
+              if (mimeType.mime === 'image/jpeg' || mimeType.mime === 'image/png') {
+                this.imageExtension = mimeType.mime.indexOf('jpeg') > -1 ? 'jpeg' : 'png'
+
+                // Valid. Now create DataURL.
+                dataURLReader.readAsDataURL(response.data)
+              } else {
+                throw new Error('Invalid file type: ' + mimeType.mime)
+              }
+            }
+            arrayBufferReader.readAsArrayBuffer(response.data)
+
+            dataURLReader.onload = e => {
               let img = new Image()
               img.onload = () => {
                 // Image done
                 try {
                   // Read file extension from DataUrl and require it to be jpeg or png
-                  let mime = e.target.result.substring(5, e.target.result.indexOf(';base64'))
-                  if (mime !== 'image/jpeg' && mime !== 'image/png') throw new Error('Invalid file type: ' + mime)
-
-                  this.imageExtension = mime.indexOf('jpeg') > -1 ? 'jpeg' : 'png'
+                  // let mime = e.target.result.substring(5, e.target.result.indexOf(';base64'))
                   this.imageDimensions = [img.width, img.height]
                   this.previewData = e.target.result
-                  this.resultBlob = this._dataUrltoBlob(this.previewData, mime)
+                  this.resultBlob = this._dataUrltoBlob(this.previewData, mimeType.mime)
                   this.cropped = true
                   this.upload = false
                 } catch (error) {
+                  console.error('Load default image:', error)
                   Raven.captureException(error)
-                  console.log('Load default image:', error)
                 }
               }
               img.src = e.target.result
             }
-            reader.readAsDataURL(response)
           }).catch(error => {
             console.error('image download:', error)
             Raven.captureException(error)

@@ -14,8 +14,9 @@ export default {
     return axios({
       method: 'get',
       url: url,
-      crossDomain: true,
-      responseType: 'blob'
+      crossdomain: true,
+      responseType: 'blob',
+      maxContentLength: 1024 * 1024
     })
   },
 
