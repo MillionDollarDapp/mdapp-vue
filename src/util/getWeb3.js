@@ -28,9 +28,12 @@ const getWeb3 = async () => {
   try {
     result.networkId = await result.web3().eth.net.getId()
     result.block = await result.web3().eth.getBlockNumber()
-    result.coinbase = result.injectedWeb3 ? result.web3().utils.toChecksumAddress(await result.web3().eth.getCoinbase()) : null
+    result.coinbase = result.injectedWeb3 ? await result.web3().eth.getCoinbase() : null
 
     if (result.coinbase) {
+      // Convert to checksumAddress.
+      result.coinbase = result.web3().utils.toChecksumAddress(result.coinbase)
+
       result.balance = result.web3().utils.toBN(await result.web3().eth.getBalance(result.coinbase))
       result.balanceEth = Number(result.web3().utils.fromWei(result.balance, 'ether')).toFixed(3)
     }

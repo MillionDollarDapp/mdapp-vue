@@ -9,9 +9,12 @@ const pollWeb3Function = async () => {
     let hadEther = store.state.web3.balance && store.state.web3.balance.gt(0)
 
     try {
-      let data = { coinbase: store.state.web3.isInjected ? web3.utils.toChecksumAddress(await web3.eth.getCoinbase()) : null }
+      let data = { coinbase: store.state.web3.isInjected ? await web3.eth.getCoinbase() : null }
 
       if (data.coinbase) {
+        // Convert to checksumAdress.
+        data.coinbase = web3.utils.toChecksumAddress(data.coinbase)
+
         if (!hadCoinbase) store.dispatch('setHelperProgress', ['unlock', true])
 
         let conditionalPromises = {
