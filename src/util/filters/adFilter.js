@@ -21,19 +21,19 @@ const adFilter = {
     // Will hold all transactions which caused an event.
     let txs = new Map()
 
-    let claimPromise = store.state.mdappContractInstance().getPastEvents('Claim', {
+    let claimPromise = store.state.mdappContractInstanceWatcher().getPastEvents('Claim', {
       filter: { owner: store.state.web3.coinbase },
       fromBlock: process.env.DAPP_GENESIS,
       toBlock: store.state.web3.block
     })
 
-    let releasePromise = store.state.mdappContractInstance().getPastEvents('Release', {
+    let releasePromise = store.state.mdappContractInstanceWatcher().getPastEvents('Release', {
       filter: { owner: store.state.web3.coinbase },
       fromBlock: process.env.DAPP_GENESIS,
       toBlock: store.state.web3.block
     })
 
-    let editPromise = store.state.mdappContractInstance().getPastEvents('EditAd', {
+    let editPromise = store.state.mdappContractInstanceWatcher().getPastEvents('EditAd', {
       filter: { owner: store.state.web3.coinbase },
       fromBlock: process.env.DAPP_GENESIS,
       toBlock: store.state.web3.block
@@ -181,7 +181,7 @@ const adFilter = {
       this._editAdFilter.unsubscribe()
     }
 
-    this._claimFilter = store.state.mdappContractInstance().events.Claim({
+    this._claimFilter = store.state.mdappContractInstanceWatcher().events.Claim({
       filter: { owner: store.state.web3.coinbase },
       fromBlock: store.state.initBlock,
       toBlock: 'latest'
@@ -200,7 +200,7 @@ const adFilter = {
         Raven.captureException(error)
       })
 
-    this._releaseFilter = store.state.mdappContractInstance().events.Release({
+    this._releaseFilter = store.state.mdappContractInstanceWatcher().events.Release({
       filter: { owner: store.state.web3.coinbase },
       fromBlock: store.state.initBlock,
       toBlock: 'latest'
@@ -219,10 +219,10 @@ const adFilter = {
         Raven.captureException(error)
       })
 
-    this._editAdFilter = store.state.mdappContractInstance().events.EditAd({
+    this._editAdFilter = store.state.mdappContractInstanceWatcher().events.EditAd({
       filter: { owner: store.state.web3.coinbase },
       fromBlock: store.state.initBlock,
-      toBlock: 'pending'
+      toBlock: 'latest'
     })
       .on('data', event => {
         this._processWatchLog(event, 'user')
@@ -388,7 +388,7 @@ const adFilter = {
       // TODO: load a bootstrap json
       // 1st get claim events
       // 'Release' can be avoided since we filter already for active ads.
-      let pastClaims = await store.state.mdappContractInstance().getPastEvents('Claim', {
+      let pastClaims = await store.state.mdappContractInstanceWatcher().getPastEvents('Claim', {
         filter: { id: adIds },
         fromBlock: process.env.DAPP_GENESIS,
         toBlock: store.state.web3.block
@@ -400,7 +400,7 @@ const adFilter = {
       }
 
       // 2nd get all edits of these ads.
-      let pastEdits = await store.state.mdappContractInstance().getPastEvents('EditAd', {
+      let pastEdits = await store.state.mdappContractInstanceWatcher().getPastEvents('EditAd', {
         filter: { id: adIds },
         fromBlock: process.env.DAPP_GENESIS,
         toBlock: store.state.web3.block
@@ -412,7 +412,7 @@ const adFilter = {
       }
 
       // 3th get NSFWs
-      let pastNSFWs = await store.state.mdappContractInstance().getPastEvents('ForceNSFW', {
+      let pastNSFWs = await store.state.mdappContractInstanceWatcher().getPastEvents('ForceNSFW', {
         filter: { id: adIds },
         fromBlock: process.env.DAPP_GENESIS,
         toBlock: store.state.web3.block
@@ -434,7 +434,7 @@ const adFilter = {
 
   watchAllAds () {
     // Claim watching
-    store.state.mdappContractInstance().events.Claim({
+    store.state.mdappContractInstanceWatcher().events.Claim({
       fromBlock: store.state.initBlock,
       toBlock: 'latest'
     })
@@ -453,7 +453,7 @@ const adFilter = {
       })
 
     // Release watching
-    store.state.mdappContractInstance().events.Release({
+    store.state.mdappContractInstanceWatcher().events.Release({
       fromBlock: store.state.initBlock,
       toBlock: 'latest'
     })
@@ -472,7 +472,7 @@ const adFilter = {
       })
 
     // EditAd watching
-    store.state.mdappContractInstance().events.EditAd({
+    store.state.mdappContractInstanceWatcher().events.EditAd({
       fromBlock: store.state.initBlock,
       toBlock: 'latest'
     })
@@ -491,7 +491,7 @@ const adFilter = {
       })
 
     // ForceNSFW watching
-    store.state.mdappContractInstance().events.ForceNSFW({
+    store.state.mdappContractInstanceWatcher().events.ForceNSFW({
       fromBlock: store.state.initBlock,
       toBlock: 'pending'
     })

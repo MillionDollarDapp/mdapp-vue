@@ -30,6 +30,7 @@ export const store = new Vuex.Store({
       web3Copy.isInjected = result.injectedWeb3
       web3Copy.block = result.block
       web3Copy.web3Instance = result.web3
+      web3Copy.web3Watcher = result.web3Watcher
       state.web3 = web3Copy
       pollWeb3()
     },
@@ -63,10 +64,12 @@ export const store = new Vuex.Store({
     },
     // Contract registration
     registerSaleContractInstance (state, payload) {
-      state.saleContractInstance = () => payload
+      state.saleContractInstance = () => payload[0]
+      state.saleContractInstanceWatcher = () => payload[1]
     },
     registerMdappContractInstance (state, payload) {
-      state.mdappContractInstance = () => payload
+      state.mdappContractInstance = () => payload[0]
+      state.mdappContractInstanceWatcher = () => payload[1]
     },
     registerTokenContractInstance (state, payload) {
       state.tokenContractInstance = () => payload

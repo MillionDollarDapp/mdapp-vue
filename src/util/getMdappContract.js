@@ -4,7 +4,11 @@ import {store} from '../store/'
 
 const getMdappContract = () => {
   let web3 = store.state.web3.web3Instance()
-  return new web3.eth.Contract(contractArtifacts.abi, contractArtifacts.networks[store.state.web3.networkId].address)
+  let web3Watcher = store.state.web3.web3Watcher()
+  return [
+    new web3.eth.Contract(contractArtifacts.abi, contractArtifacts.networks[store.state.web3.networkId].address),
+    new web3Watcher.eth.Contract(contractArtifacts.abi, contractArtifacts.networks[store.state.web3.networkId].address)
+  ]
 }
 
 const initMdappContract = async () => {

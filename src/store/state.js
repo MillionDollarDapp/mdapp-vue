@@ -2,6 +2,7 @@ let state = {
   web3: {
     isInjected: false,
     web3Instance: null,
+    web3Watcher: null,
     networkId: null,
     coinbase: null,
     balance: null,
@@ -11,8 +12,10 @@ let state = {
     blockTimes: new Map() // Holds minig date for each relevant block
   },
   saleContractInstance: null,
+  saleContractInstanceWatcher: null,
   tokenContractInstance: null,
   mdappContractInstance: null,
+  mdappContractInstanceWatcher: null,
 
   // Helper for triggering changes in unreactive data structures (like Map())
   trigger: {

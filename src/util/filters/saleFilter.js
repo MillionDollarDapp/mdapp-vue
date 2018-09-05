@@ -12,12 +12,12 @@ const saleFilter = {
     // Will hold all transactions which caused an event.
     let txs = new Map()
 
-    let purchasesPromise = store.state.saleContractInstance().getPastEvents('TokenPurchase', {
+    let purchasesPromise = store.state.saleContractInstanceWatcher().getPastEvents('TokenPurchase', {
       filter: { purchaser: store.state.web3.coinbase },
       fromBlock: process.env.DAPP_GENESIS,
       toBlock: store.state.web3.block
     })
-    let recruitmentsPromise = store.state.saleContractInstance().getPastEvents('Recruited', {
+    let recruitmentsPromise = store.state.saleContractInstanceWatcher().getPastEvents('Recruited', {
       filter: { recruiter: store.state.web3.coinbase },
       fromBlock: process.env.DAPP_GENESIS,
       toBlock: store.state.web3.block
@@ -79,7 +79,7 @@ const saleFilter = {
       this._recruitementFilter.unsubscribe()
     }
 
-    this._recruitementFilter = store.state.saleContractInstance().events.Recruited({
+    this._recruitementFilter = store.state.saleContractInstanceWatcher().events.Recruited({
       filter: { recruiter: store.state.web3.coinbase },
       fromBlock: store.state.initBlock,
       toBlock: 'latest'

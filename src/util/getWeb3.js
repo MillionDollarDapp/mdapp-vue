@@ -24,6 +24,14 @@ const getWeb3 = async () => {
     }
   }
 
+  // Make sure we have 2nd web3 instance to bypass MetaMasks subscription restrictions.
+  if (typeof window.web3Watcher === 'undefined') {
+    window.web3Watcher = new Web3(new Web3.providers.WebsocketProvider(process.env.WEB3_ENDPOINT))
+  }
+  result.web3Watcher = () => {
+    return window.web3Watcher
+  }
+
   // Get web3 state
   try {
     result.networkId = await result.web3().eth.net.getId()
