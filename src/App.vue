@@ -12,6 +12,7 @@
                    v-on:changeBuyPossible="changeBuyPossible"
                    v-on:showTxLog="showDropdownPing = !showDropdownPing"/>
     </div>
+    <footer-nav/>
 
     <div id="welcome-modal-content" style="display: none">
       <div class="text-left">
@@ -47,6 +48,9 @@
           <span class="font-weight-bold">Important Note: This site is currently under heavy development and operates on the Rinkeby TESTNET. This means the state can change and be reset.<br />
                 Do not expect the site to do what it should!</span>
         </p>
+        <p class="greet text-right">
+          Build with passion in Karlsruhe, Germany
+        </p>
         <div class="footnotes">
           *not yet implementended in the frontend
         </div>
@@ -60,6 +64,7 @@ import Raven from 'raven-js'
 import filters from './util/filters/filters'
 import HelperList from '@/components/helperList'
 import Navbar from '@/components/navbar'
+import FooterNav from '@/components/footerNav'
 
 export default {
   name: 'App',
@@ -82,7 +87,8 @@ export default {
   },
   components: {
     HelperList,
-    Navbar
+    Navbar,
+    FooterNav
   },
 
   data () {
@@ -99,13 +105,13 @@ export default {
 
   mounted () {
     let content = document.getElementById('welcome-modal-content').innerHTML
-    console.log(content)
 
     this.$swal({
       type: 'info',
       width: 900,
       customClass: 'welcome-modal',
       html: content,
+      heightAuto: false,
       showConfirmButton: false
     })
   },
@@ -127,9 +133,9 @@ export default {
 </script>
 
 <style>
-html, body, #app {
+html, body {
   min-height: 100% !important;
-  height: 100%;
+  height: 100% !important;
 }
 
 #app {
@@ -138,6 +144,7 @@ html, body, #app {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  min-height: 100% !important;
 }
 
 .navigation {
@@ -162,6 +169,10 @@ html, body, #app {
 
 .welcome-modal .swal2-content {
   padding-left: 20px;
+}
+
+.welcome-modal .greet {
+  font-size: 0.8rem;
 }
 
 .welcome-modal .footnotes {
