@@ -87,6 +87,9 @@
         </div>
         <div class="d-flex justify-content-start text-white sub-nav">
           <!--<div class="slogan text-white-50 ml-3">...be part of history!</div>-->
+          <div class="slogan text-white-50 pl-2">
+            1,000,000 pixels &#9675; $1 per pixel &#9675; 100 pixels per token
+          </div>
           <div class="flex-grow-1 d-flex justify-content-end sub-nav-right text-white-50">
             <template v-if="web3Data.coinbase">
               <template v-if="!this.$store.state.soldOut">
