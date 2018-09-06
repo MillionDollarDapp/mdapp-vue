@@ -104,6 +104,7 @@ export const store = new Vuex.Store({
         state.oracleGasLimit = payload.oracleGasLimit
         state.oracleInterval = payload.oracleInterval
         state.oracleLastUpdate = payload.oracleLastUpdate
+        state.contractFunds = payload.contractFunds
       }
     },
     pollMdappContractData (state, payload) {

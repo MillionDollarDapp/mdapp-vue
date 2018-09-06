@@ -34,6 +34,7 @@ const pollSaleContractFunction = async () => {
         promises.push(store.state.saleContractInstance().methods.oracleGasLimit().call())
         promises.push(store.state.saleContractInstance().methods.oracleInterval().call())
         promises.push(store.state.saleContractInstance().methods.oracleLastUpdate().call())
+        promises.push(store.state.saleContractInstance().methods.payments(store.state.wallet).call())
       }
 
       // Call all methods in parallel.
@@ -54,7 +55,8 @@ const pollSaleContractFunction = async () => {
         data.oracleGasPrice = parseInt(values[index++])
         data.oracleGasLimit = parseInt(values[index++])
         data.oracleInterval = parseInt(values[index++])
-        data.oracleLastUpdate = parseInt(values[index]) * 1000
+        data.oracleLastUpdate = parseInt(values[index++]) * 1000
+        data.contractFunds = web3.utils.toBN(values[index])
       }
 
       if (data.soldOut && pollSaleInterval !== null) clearInterval(pollSaleInterval)

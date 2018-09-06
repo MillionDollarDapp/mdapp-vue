@@ -14,8 +14,8 @@
 
         <b-card header="Withdrawable">
           <p class="card-text">
-            {{ this.$store.getters.withdrawableBalanceEth }} ETH<br />
-            ${{ Number(this.$store.getters.withdrawableBalanceEth * this.$store.state.ethusd / 100).toFixed(2) }}
+            {{ this.$store.getters.contractFundsEth }} ETH<br />
+            ${{ Number(this.$store.getters.contractFundsEth * this.$store.state.ethusd / 100).toFixed(2) }}
           </p>
         </b-card>
 
@@ -131,7 +131,7 @@
               ${{ Number(this.$store.getters.withdrawableBalanceEth * this.$store.state.ethusd / 100).toFixed(2) }}
             </p>
 
-            <b-button variant="success" size="sm" @click="withdrawSaleIncome" :disabled="typeof this.withdrawableBalance !== 'object' || this.withdrawableBalance === 0 || this.withdrawableBalance.lt(1)">Withdraw</b-button>
+            <b-button variant="success" size="sm" @click="withdrawBalance" :disabled="!this.withdrawableBalance || this.withdrawableBalance.eq(this.web3.utils.toBN(0))">Withdraw</b-button>
           </b-card>
         </b-card-group>
       </template>

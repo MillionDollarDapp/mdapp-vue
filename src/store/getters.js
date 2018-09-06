@@ -24,6 +24,10 @@ if (withMetamask) {
 window.web3.withMetamask = withMetamask
 let web3 = window.web3
 
+/***********
+ * Getters *
+ * *********/
+
 let getters = {
   // Shorted version of users Ethereum address
   coinbaseShort () {
@@ -80,6 +84,10 @@ let getters = {
 
   oracleFundsEth () {
     return state.oracleFunds ? Number(web3.utils.fromWei(state.oracleFunds)).toFixed(8) : 0
+  },
+
+  contractFundsEth () {
+    return state.contractFunds ? Number(web3.utils.fromWei(state.contractFunds)).toFixed(8) : 0
   },
 
   withdrawableBalanceEth () {

@@ -46,7 +46,8 @@ let state = {
   ethusd: 0,
   soldOut: false,
   supply: 0,
-  withdrawableBalance: 0,
+  withdrawableBalance: null, // of the current user
+  contractFunds: null, // withdrawable by wallet
   oracleActive: false,
   oracleLastUpdate: 0,
   oracleFunds: null,
