@@ -4,7 +4,7 @@
     <hr/>
 
       <!--Contract Owner-->
-    <template v-if="this.web3.coinbase === this.owner">
+    <template v-if="this.web3Data.coinbase === this.owner">
       <b-card-group deck>
         <b-card header="Supply">
           <p class="card-text">
@@ -117,13 +117,13 @@
             {{ this.$store.getters.oracleFundsEth }} ETH
           </p>
 
-          <b-button variant="success" size="sm" @click="withdrawOracleFunds" v-if="this.web3.coinbase === this.owner">Withdraw and disable</b-button>
+          <b-button variant="success" size="sm" @click="withdrawOracleFunds" v-if="this.web3Data.coinbase === this.owner">Withdraw and disable</b-button>
         </b-card>
       </b-card-group>
     </template>
 
       <!--Withdrawal wallet-->
-      <template v-if="this.web3.coinbase === this.wallet">
+      <template v-if="this.web3Data.coinbase === this.wallet">
         <b-card-group deck>
           <b-card header="Withdrawable">
             <p class="card-text">
@@ -150,11 +150,7 @@ import mdappContract from '../util/interactions/mdappContract'
 import saleContract from '../util/interactions/saleContract'
 import { newTransaction } from '../util/transaction'
 import utils from '../util/utils'
-import Web3 from 'web3'
 import Raven from 'raven-js'
-
-var web3 = window.web3
-web3 = new Web3(web3.currentProvider)
 
 export default {
   name: 'AdminPanel',
@@ -176,46 +172,65 @@ export default {
   },
 
   computed: {
-    ...mapState(['web3', 'owner', 'wallet', 'oracleActive', 'oracleFunds', 'oracleGasLimit', 'oracleGasPrice', 'oracleInterval', 'withdrawableBalance']),
+    ...mapState(['owner', 'wallet', 'oracleActive', 'oracleFunds', 'oracleGasLimit', 'oracleGasPrice', 'oracleInterval', 'withdrawableBalance']),
     transferIsAllowed () {
       if (this.$store.getters.transferAllowed) {
         return 'Yes'
       }
       return 'No'
+    },
+
+    web3Data () {
+      return this.$store.state.web3
+    },
+
+    web3 () {
+      return this.$store.state.web3.web3Instance()
     }
   },
 
   methods: {
-    grantBounty () {
+    async grantBounty () {
       // Just do a weak validation for admin
-      if (this.bountyBeneficiary && web3.isAddress(this.bountyBeneficiary) &&
+      if (this.bountyBeneficiary && this.web3.isAddress(this.bountyBeneficiary) &&
         this.bountyTokens > 0 && this.bountyReason) {
-        saleContract.grantBounty(this.bountyBeneficiary, this.bountyTokens, this.bountyReason).then((txHash, err) => {
-          if (err) {
-            let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+        try {
+          let [error, tx] = await saleContract.grantBounty(this.bountyBeneficiary, this.bountyTokens, this.bountyReason)
+          if (error) throw error
+          tx
+            .on('transactionHash', txHash => {
+              this.$swal({
+                type: 'success',
+                title: 'Transaction sent',
+                html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+                showConfirmButton: false,
+                onAfterClose: () => {
+                  this.$emit('showTxLog')
+                }
+              })
+
+              newTransaction(txHash, 'grantBounty', {beneficiary: this.bountyBeneficiary, tokens: this.bountyTokens, reason: this.bountyReason}, 'pending')
+              this.bountyBeneficiary = null
+              this.bountyTokens = null
+              this.bountyReason = null
+            })
+            .on('error', error => {
+              throw error
+            })
+        } catch (error) {
+          let msg = error.message
+          if (msg.indexOf('User denied transaction signature') === -1) {
+            console.error('grantBounty:', error)
+            Raven.captureException(error)
+
             this.$swal({
               type: 'error',
               title: 'Error',
-              html: msg,
+              html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
               showConfirmButton: false
             })
-            newTransaction(txHash, 'grantBounty', {beneficiary: this.bountyBeneficiary, tokens: this.bountyTokens, reason: this.bountyReason, error: msg}, 'error')
-          } else {
-            this.$swal({
-              type: 'success',
-              title: 'Transaction sent',
-              html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-              showConfirmButton: false
-            })
-
-            newTransaction(txHash, 'grantBounty', {beneficiary: this.bountyBeneficiary, tokens: this.bountyTokens, reason: this.bountyReason}, 'pending')
-            this.bountyBeneficiary = null
-            this.bountyTokens = null
-            this.bountyReason = null
           }
-        }).catch(e => {
-          Raven.captureException(e)
-        })
+        }
       } else {
         this.$swal({
           type: 'error',
@@ -226,244 +241,344 @@ export default {
       }
     },
 
-    withdrawBalance () {
-      saleContract.withdrawBalance().then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async withdrawBalance () {
+      try {
+        let [error, tx] = await saleContract.withdrawBalance()
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'withdrawBalance', {}, 'pending')
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('withdrawBalance:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'withdrawBalance', {error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'withdrawBalance', {}, 'pending')
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     },
 
-    withdrawOracleFunds () {
-      saleContract.withdrawOracleFunds().then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async withdrawOracleFunds () {
+      try {
+        let [error, tx] = await saleContract.withdrawOracleFunds()
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'withdrawOracleFunds', {}, 'pending')
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('withdrawOracleFunds:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'withdrawOracleFunds', {error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'withdrawOracleFunds', {}, 'pending')
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     },
 
-    activateOracle () {
-      saleContract.activateOracle(this.loadOracleFunds).then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async activateOracle () {
+      try {
+        let fundsWei = this.web3.utils.toBN(this.web3.utils.toWei(this.loadOracleFunds))
+        let [error, tx] = await saleContract.activateOracle(fundsWei)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'activateOracle', {funds: this.loadOracleFunds}, 'pending')
+            this.loadOracleFunds = null
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('activateOracle:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'activateOracle', {funds: this.loadOracleFunds, error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'activateOracle', {funds: this.loadOracleFunds}, 'pending')
-          this.loadOracleFunds = null
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     },
 
-    setGasPrice () {
-      saleContract.setOracleGasPrice(this.newGasPrice).then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async setGasPrice () {
+      try {
+        let [error, tx] = await saleContract.setOracleGasPrice(this.newGasPrice)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'setOracleGasPrice', {price: this.newGasPrice}, 'pending')
+            this.newGasPrice = null
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('setGasPrice:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'setOracleGasPrice', {price: this.newGasPrice, error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'setOracleGasPrice', {price: this.newGasPrice}, 'pending')
-          this.newGasPrice = null
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     },
 
-    setGasLimit () {
-      saleContract.setOracleGasLimit(this.newGasLimit).then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async setGasLimit () {
+      try {
+        let [error, tx] = await saleContract.setOracleGasLimit(this.newGasLimit)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'setOracleGasLimit', {limit: this.newGasLimit}, 'pending')
+            this.newGasLimit = null
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('setGasLimit:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'setOracleGasLimit', {limit: this.newGasLimit, error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'setOracleGasLimit', {limit: this.newGasLimit}, 'pending')
-          this.newGasLimit = null
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     },
 
-    setOracleInterval () {
-      saleContract.setOracleInterval(this.newInterval).then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async setOracleInterval () {
+      try {
+        let [error, tx] = await saleContract.setOracleInterval(this.newInterval)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'setOracleInterval', {interval: this.newInterval}, 'pending')
+            this.newInterval = null
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('setOracleInterval:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'setOracleInterval', {interval: this.newInterval, error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'setOracleInterval', {interval: this.newInterval}, 'pending')
-          this.newInterval = null
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     },
 
-    setOracleQueryString () {
-      saleContract.setOracleQueryString(this.newQueryString).then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async setOracleQueryString () {
+      try {
+        let [error, tx] = await saleContract.setOracleQueryString(this.newQueryString)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'setOracleQueryString', {queryString: this.newQueryString}, 'pending')
+            this.newQueryString = null
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('setOracleQueryString:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'setOracleString', {queryString: this.newQueryString, error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'setOracleQueryString', {queryString: this.newQueryString}, 'pending')
-          this.newQueryString = null
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     },
 
-    setETHUSD () {
-      saleContract.setETHUSD(this.newETHUSD).then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async setETHUSD () {
+      try {
+        let [error, tx] = await saleContract.setETHUSD(this.newETHUSD)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'setEthUsd', {ethusd: this.newETHUSD}, 'pending')
+            this.newETHUSD = null
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('setETHUSD:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'setEthUsd', {ethusd: this.newETHUSD, error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'setEthUsd', {ethusd: this.newETHUSD}, 'pending')
-          this.newETHUSD = null
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     },
 
-    forceAllowTransfer () {
-      mdappContract.allowTransfer().then((txHash, err) => {
-        if (err) {
-          let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
+    async forceAllowTransfer () {
+      try {
+        let [error, tx] = await mdappContract.allowTransfer()
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
+            this.$swal({
+              type: 'success',
+              title: 'Transaction sent',
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
+            })
+
+            newTransaction(txHash, 'allowTransfer', {}, 'pending')
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('setETHUSD:', error)
+          Raven.captureException(error)
+
           this.$swal({
             type: 'error',
             title: 'Error',
-            html: msg,
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
             showConfirmButton: false
           })
-          newTransaction(txHash, 'allowTransfer', {error: msg}, 'error')
-        } else {
-          this.$swal({
-            type: 'success',
-            title: 'Transaction sent',
-            html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-            showConfirmButton: false
-          })
-
-          newTransaction(txHash, 'allowTransfer', {}, 'pending')
         }
-      }).catch(e => {
-        Raven.captureException(e)
-      })
+      }
     }
   }
 }
