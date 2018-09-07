@@ -132,7 +132,9 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
+@import "~bootstrap/scss/bootstrap.scss";
+
 html, body {
   min-height: 100% !important;
   height: 100% !important;
@@ -200,5 +202,13 @@ html, body {
 }
 .modal {
   z-index: 1066 !important;
+}
+
+a {
+  text-decoration: none !important;
+  transition: color .3s;
+}
+a:hover {
+  color: $blue !important;
 }
 </style>

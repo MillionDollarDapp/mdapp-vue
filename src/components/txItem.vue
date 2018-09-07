@@ -121,9 +121,6 @@ export default {
     a {
       line-height: 1rem;
       color: inherit;
-      text-decoration: none !important;
-      transition: color .3s;
-      display: inline-block;
       height: 1rem;
 
       svg {
@@ -135,7 +132,6 @@ export default {
     }
   }
 
-  .notice a:hover,
   .notice a:hover svg {
     color: $blue;
   }

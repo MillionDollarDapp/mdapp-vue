@@ -1,30 +1,30 @@
 export const NETWORKS = {
   '1': {
-    name: 'Main Net',
+    name: 'Main',
     blockexplorerBaseURL: 'https://etherscan.io'
   },
   '2': {
-    name: 'Deprecated Morden test network',
+    name: 'Morden',
     blockexplorerBaseURL: 'https://morden.etherscan.io'
   },
   '3': {
-    name: 'Ropsten test network',
+    name: 'Ropsten',
     blockexplorerBaseURL: 'https://ropsten.etherscan.io'
   },
   '4': {
-    name: 'Rinkeby test network',
+    name: 'Rinkeby',
     blockexplorerBaseURL: 'https://rinkeby.etherscan.io'
   },
   '42': {
-    name: 'Kovan test network',
+    name: 'Kovan',
     blockexplorerBaseURL: 'https://kovan.etherscan.io'
   },
   '4447': {
-    name: 'Truffle Develop Network',
+    name: 'Truffle',
     blockexplorerBaseURL: 'https://etherscan.io'
   },
   '5777': {
-    name: 'Ganache Blockchain',
+    name: 'Ganache',
     blockexplorerBaseURL: 'https://etherscan.io'
   }
 }
