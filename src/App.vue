@@ -205,6 +205,7 @@ html, body {
 }
 
 a {
+  outline: none !important;
   text-decoration: none !important;
   transition: color .3s;
 }
