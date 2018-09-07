@@ -33,7 +33,7 @@
         </p>
         <p>
           To be allowed to place an ad, one needs so called <span class="font-weight-bold">MDAPP</span> (ERC20 compliant) tokens which are locked as long as you occupy space.
-          Each token represents 10x10 pixels. At the same time this are the minimum dimensions of your add. The tokens are transferable once all 10,000 tokens have been sold.
+          Each token represents 10x10 pixels. At the same time, these are the minimum dimensions of your add. The tokens are transferable once all 10,000 tokens have been sold.
         </p>
         <p>To interact, you need to:</p>
         <ol>

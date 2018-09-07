@@ -53,7 +53,10 @@
           </template>
 
           <div class="step-item d-flex align-items-center" :class="tabClass(2)">
-            <div>
+            <div v-if="$store.state.web3.networkId === 4">
+              Load your account with some Ether. As we are on a testnet, you can get them for free at the <a href="https://faucet.rinkeby.io/" target="_blank">Rinkeby Faucet</a>.
+            </div>
+            <div v-else>
               Load your account with some Ether. You can buy them on several exchanges.
             </div>
           </div>
