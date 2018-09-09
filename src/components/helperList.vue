@@ -15,7 +15,7 @@
 
           <div class="step-item d-flex align-items-center" :class="tabClass(0)">
             <div>
-              In order to interact with this application, you need to install the MetaMask extension within your browser.
+              In order to get your own pixels, you need to install the MetaMask extension within your browser.
               Please visit <a href="https://metamask.io" target="_blank">https://metamask.io</a> for further instructions.
             </div>
             <div class="flex-grow-1 px-4 text-center">
@@ -37,7 +37,9 @@
           <div class="step-item d-flex align-items-center" :class="tabClass(1)">
             <div>
               Open the MetaMask extension (<img src="@/assets/metamask-fox.svg" width="18px" height="18px"/> - symbol at the
-              top right of your browser) and follow the instructions to unlock or create an account.
+              top right of your browser) and follow the instructions to unlock or create an account. See
+              <a href="https://www.youtube.com/watch?v=6Gf_kRE4MJU" target="_blank">this video</a> for a brief
+              introduction to MetaMask.
             </div>
           </div>
         </b-tab>
@@ -74,7 +76,10 @@
 
           <div class="step-item d-flex align-items-center" :class="tabClass(3)">
             <div>
-              Select the size of the area you want to claim in the next step. The popover will instruct you how to buy the necessary MDAPP tokens.
+              Select the area dimensions you want to claim by clicking on a square and dragging the mouse to the opposite
+              corner of the area while holding the mouse button pressed.<br />
+              After releasing the mouse button a dialog opens which shows you the amount of MDAPP tokens required to claim this area.
+              Then click on the "Buy" - button and complete the checkout.
             </div>
           </div>
         </b-tab>
@@ -120,7 +125,7 @@
 
     <!--Open Button-->
     <div id="helperOpenButton" class="bg-dark text-white text-center mb-3" v-on:click="open" v-b-tooltip.hover title="How to place your ad">
-      Help
+      How to place your ad
     </div>
   </div>
 </template>
@@ -264,7 +269,7 @@ export default {
 
 <style scoped>
   #helperOpenButton {
-    width: 60px;
+    width: 130px;
     height: 18px;
     font-size: 0.75rem;
     margin: 0 auto;

@@ -13,7 +13,7 @@
             </b-navbar-nav>
 
             <b-button id="quickBuyBtn" class="ml-2" variant="success" size="sm" @click="buyBtnPressed" v-b-tooltip.hover title="Buy MDAPP to claim your pixels"
-              v-if="buyPossible">
+              v-if="buyPossible && web3Data.coinbase">
               Buy Now!
             </b-button>
 
@@ -39,7 +39,7 @@
                   <b-col md="auto" class="p-0 icon-col icons-nospace"><arrow-left-icon/><arrow-right-icon/></b-col>
                   <b-col md="auto">
                     <b-nav-text>
-                      <b-badge class="link" v-if="this.$store.getters.claimedPixels > 0" @click="highlightClaimed" v-b-tooltip.hover title="Click to highlight your pixels">{{ this.$store.getters.claimedPixels }} Pixels</b-badge>
+                      <b-badge v-if="this.$store.getters.claimedPixels > 0" v-b-tooltip.hover title="Amount of claimed pixels">{{ this.$store.getters.claimedPixels }} Pixels</b-badge>
                       <b-badge v-else>0 Pixels</b-badge>
                     </b-nav-text>
                   </b-col>
