@@ -55,8 +55,7 @@ const web3Manager = {
    */
   detectedDisconnect () {
     if (!this._isReconnecting) {
-      console.log('detected disconnect')
-      this._isReconnecting = true
+      console.info('detected disconnect')
       this._handleDisconnect()
     }
   },
@@ -65,24 +64,26 @@ const web3Manager = {
    * Establish a new connection attempt and increment a delay between each failed attempt.
    */
   async _reconnect () {
-    this._isReconnecting = true
+    if (!this._isReconnecting) {
+      this._isReconnecting = true
 
-    // Reset connectionAttempts only after a certain amount of connection stability.
-    if (!this._lastConnectionAttempt && Math.floor(Date.now() / 1000) - this._lastConnectionAttempt > 30) {
-      this._connectionAttempts = 0
+      // Reset connectionAttempts only after a certain amount of connection stability.
+      if (!this._lastConnectionAttempt && Math.floor(Date.now() / 1000) - this._lastConnectionAttempt > 30) {
+        this._connectionAttempts = 0
+      }
+
+      // Higher the delay between each reconnection attempt.
+      this._connectionAttempts++
+      let delay = this._connectionAttempts * 500
+      console.info('delay:', delay)
+
+      await new Promise(resolve => setTimeout(resolve, delay))
+      store.dispatch('setConnectionState', 'reconnecting')
+
+      console.info('reconnecting')
+      this._customProvider = null
+      window.web3Watcher.setProvider(this._getCustomProvider())
     }
-
-    // Higher the delay between each reconnection attempt.
-    this._connectionAttempts++
-    let delay = this._connectionAttempts * 500
-    console.log('delay:', delay)
-
-    await new Promise(resolve => setTimeout(resolve, delay))
-    store.dispatch('setConnectionState', 'reconnecting')
-
-    console.log('reconnecting')
-    this._customProvider = null
-    window.web3Watcher.setProvider(this._getCustomProvider())
   },
 
   /**
@@ -120,7 +121,7 @@ const web3Manager = {
     this.isConnected = true
     this._isReconnecting = false
     store.dispatch('setConnectionState', 'connected')
-    console.log(`connected to ${process.env.WEB3_ENDPOINT}`)
+    console.info(`connected to ${process.env.WEB3_ENDPOINT}`)
 
     // Data might have changed.
     await this._getWeb3Data()
@@ -144,7 +145,7 @@ const web3Manager = {
     this.isConnected = false
     this._isReconnecting = false
     store.dispatch('setConnectionState', 'diconnected')
-    console.log('connection lost')
+    console.info('connection lost')
     store.dispatch('unsetContracts')
     filters.handleDisconnect()
 

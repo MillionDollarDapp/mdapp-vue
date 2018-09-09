@@ -182,13 +182,21 @@ const adFilter = {
 
   stopWatchUser () {
     if (this._userClaimFilter) {
-      this._userClaimFilter.unsubscribe()
-      this._userReleaseFilter.unsubscribe()
-      this._userEditAdFilter.unsubscribe()
+      try {
+        this._userClaimFilter.unsubscribe()
+        this._userReleaseFilter.unsubscribe()
+        this._userEditAdFilter.unsubscribe()
+      } catch (error) {
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
+        return false
+      }
     }
+    return true
   },
   watchUserAds () {
-    this.stopWatchUser()
+    if (!this.stopWatchUser()) return
 
     this._userClaimFilter = store.state.mdappContractInstanceWatcher().events.Claim({
       filter: { owner: store.state.web3.coinbase },
@@ -454,14 +462,22 @@ const adFilter = {
 
   stopWatchAll () {
     if (this._allClaimFilter) {
-      this._allClaimFilter.unsubscribe()
-      this._allReleaseFilter.unsubscribe()
-      this._allEditAdFilter.unsubscribe()
-      this._allNSFWFilter.unsubscribe()
+      try {
+        this._allClaimFilter.unsubscribe()
+        this._allReleaseFilter.unsubscribe()
+        this._allEditAdFilter.unsubscribe()
+        this._allNSFWFilter.unsubscribe()
+      } catch (error) {
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
+        return false
+      }
     }
+    return true
   },
   watchAllAds () {
-    this.stopWatchAll()
+    if (!this.stopWatchAll()) return
 
     // Claim watching
     this._allClaimFilter = store.state.mdappContractInstanceWatcher().events.Claim({
