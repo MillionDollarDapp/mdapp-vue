@@ -47,7 +47,6 @@ export default {
         throw new Error('Sale contract not instantiated.')
       }
 
-      console.log('release:', adId, typeof adId)
       let gas = await store.state.mdappContractInstance().methods.release(adId).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.5 * 10) * gas) / 10)
       return [null, store.state.mdappContractInstance().methods.release(adId).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
