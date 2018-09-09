@@ -60,9 +60,9 @@ export default {
       version: 'n/a',
       network: 'n/a',
       blockexplorer: null,
-      mdapp: null,
-      mdappSale: null,
-      mdappToken: null
+      mdapp: this.$store.state.mdappContractInstance ? this.$store.state.mdappContractInstance().options.address : null,
+      mdappSale: this.$store.state.saleContractInstance ? this.$store.state.saleContractInstance().options.address : null,
+      mdappToken: this.$store.state.tokenContractInstance ? this.$store.state.tokenContractInstance().options.address : null
     }
   },
 

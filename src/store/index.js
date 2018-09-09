@@ -77,13 +77,16 @@ export const store = new Vuex.Store({
     registerSaleContractInstance (state, payload) {
       state.saleContractInstance = !payload[0] ? null : () => payload[0]
       state.saleContractInstanceWatcher = !payload[1] ? null : () => payload[1]
+      state.trigger.sale++
     },
     registerMdappContractInstance (state, payload) {
       state.mdappContractInstance = !payload[0] ? null : () => payload[0]
       state.mdappContractInstanceWatcher = !payload[1] ? null : () => payload[1]
+      state.trigger.mdapp++
     },
     registerTokenContractInstance (state, payload) {
       state.tokenContractInstance = !payload ? null : () => payload
+      state.trigger.token++
     },
     unsetContracts (state) {
       state.saleContractInstance = null
