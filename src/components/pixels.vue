@@ -200,16 +200,16 @@ export default {
 
     forceNSFWAds (newVal) {
       newVal.forEach(adId => {
-        // At init there might be a race condition, that allCanvasAds might not yet set.
+        // At init there might be a race condition, that allCanvasAds might be not set yet.
         let ad = this.allCanvasAds.get(adId)
         if (!ad) {
           // Try to find it in myCanvasAds
           ad = this.myCanvasAds.get(adId)
         }
 
-        if (ad) {
+        if (ad && !ad.isCurrentUser) {
           this.drawAd(ad)
-          this.$store.dispatch('setAd', ad)
+          this.$store.dispatch('setAd', {ad: ad, target: ad.isCurrentUser ? 'user' : 'all'})
         }
       })
     },
@@ -775,41 +775,41 @@ export default {
       }
     },
 
-    forceNSFW (adId) {
-      mdappContract.forceNSFW(adId)
-        .then((result, err) => {
-          if (err) {
-            Raven.captureException(err)
-            let msg = `${err.message.substr(0, 1).toUpperCase()}${err.message.substr(1)}`
-            this.$swal({
-              type: 'error',
-              title: 'Error',
-              html: msg,
-              showConfirmButton: false
-            })
-            newTransaction(result.tx, 'forceNSFW', {adId: adId, error: msg}, 'error')
-          } else {
+    async forceNSFW (adId) {
+      try {
+        let [error, tx] = await mdappContract.forceNSFW(adId)
+        if (error) throw error
+        tx
+          .on('transactionHash', txHash => {
             this.$swal({
               type: 'success',
               title: 'Transaction sent',
-              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${result.tx}" target="_blank">etherscan.io</a> or at the top right of this site.`,
-              showConfirmButton: false
+              html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+              showConfirmButton: false,
+              onAfterClose: () => {
+                this.$emit('showTxLog')
+              }
             })
 
-            newTransaction(result.tx, 'forceNSFW', {adId: adId}, 'pending')
-          }
-        }).catch(e => {
-          Raven.captureException(e)
-          let msg = e.message
-          if (msg.indexOf('User denied transaction signature') === -1) {
-            this.$swal({
-              type: 'error',
-              title: 'Error',
-              html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
-              showConfirmButton: false
-            })
-          }
-        })
+            newTransaction(txHash, 'forceNSFW', {adId: adId}, 'pending')
+          })
+          .on('error', error => {
+            throw error
+          })
+      } catch (error) {
+        let msg = error.message
+        if (msg.indexOf('User denied transaction signature') === -1) {
+          console.error('forceNSFW:', error)
+          Raven.captureException(error)
+
+          this.$swal({
+            type: 'error',
+            title: 'Error',
+            html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
+            showConfirmButton: false
+          })
+        }
+      }
       return false
     },
 

@@ -37,7 +37,7 @@
           </div>
           <div class="d-flex">
             <div class="label">Status:</div>
-            <div class="value">connected</div>
+            <div class="value">{{ this.$store.state.web3.connectionState }}</div>
           </div>
         </div>
       </div>
@@ -71,36 +71,36 @@ export default {
       return process.env.WEB3_ENDPOINT
     },
 
-    web3 () {
-      return this.$store.state.web3.web3Watcher
+    web3DataTrigger () {
+      return this.$store.state.trigger.web3Data
     },
 
-    mdappContract () {
-      return this.$store.state.mdappContractInstance
+    mdappTrigger () {
+      return this.$store.state.trigger.mdapp
     },
-    saleContract () {
-      return this.$store.state.saleContractInstance
+    saleTrigger () {
+      return this.$store.state.trigger.sale
     },
-    tokenContract () {
-      return this.$store.state.tokenContractInstance
+    tokenTrigger () {
+      return this.$store.state.trigger.token
     }
   },
 
   watch: {
-    web3 (val) {
-      this.version = val().version
+    web3DataTrigger () {
+      this.version = this.$store.state.web3.web3Watcher().version
       this.network = NETWORKS[this.$store.state.web3.networkId].name
       this.blockexplorer = NETWORKS[this.$store.state.web3.networkId].blockexplorerBaseURL
     },
 
-    mdappContract (val) {
-      this.mdapp = val().options.address
+    mdappTrigger () {
+      this.mdapp = this.$store.state.mdappContractInstance().options.address
     },
-    saleContract (val) {
-      this.mdappSale = val().options.address
+    saleTrigger () {
+      this.mdappSale = this.$store.state.saleContractInstance().options.address
     },
-    tokenContract (val) {
-      this.mdappToken = val().options.address
+    tokenTrigger () {
+      this.mdappToken = this.$store.state.tokenContractInstance().options.address
     }
   }
 }

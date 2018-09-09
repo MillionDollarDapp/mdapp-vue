@@ -1,13 +1,12 @@
 import Raven from 'raven-js'
 import {store} from '../store/'
+import web3Manager from './web3Manager'
 
 let pollMdappInterval = null
 
 const pollMdappContractFunction = async () => {
-  let web3 = store.state.web3.web3Instance()
-
-  if (web3 && store.state.mdappContractInstance !== null) {
-    if (pollMdappInterval !== null && store.state.adStartAll !== null && store.state.adStartAll <= Date.now()) {
+  if (store.state.mdappContractInstance !== null) {
+    if (!web3Manager.isConnected || (pollMdappInterval !== null && store.state.adStartAll !== null && store.state.adStartAll <= Date.now())) {
       clearInterval(pollMdappInterval)
       return
     }
@@ -23,7 +22,7 @@ const pollMdappContractFunction = async () => {
   }
 }
 
-const pollMdappContract = function (state) {
+const pollMdappContract = function () {
   // Since we're only polling for the presale balance, we only need it as long as not everyone can claim.
   if (store.state.adStartAll === null) {
     setTimeout(() => { pollMdappContract() }, 100)

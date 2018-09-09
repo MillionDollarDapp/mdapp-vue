@@ -1,28 +1,6 @@
 import state from './state'
 import { NETWORKS } from '../util/constants/networks'
-import Web3 from 'web3'
-
-// By any reason, this file tries to access web3 first - even before main.js
-let customProvider = new Web3.providers.WebsocketProvider(process.env.WEB3_ENDPOINT)
-customProvider.on('connect', () => {
-  console.log(`connected to ${process.env.WEB3_ENDPOINT}`)
-})
-customProvider.on('end', async (e) => {
-  console.log('connection lost, reconnect...')
-})
-
-let withMetamask = typeof window.web3 !== 'undefined'
-if (withMetamask) {
-  // Overwrite injected web3 (if any) with web3 1.0
-  window.web3 = new Web3(window.web3.currentProvider)
-
-  // Store a 2nd one to bypass MetaMask subscription restrictions.
-  window.web3Watcher = new Web3(customProvider)
-} else {
-  window.web3 = new Web3(customProvider)
-}
-window.web3.withMetamask = withMetamask
-let web3 = window.web3
+import web3Manager from '../util/web3Manager'
 
 /***********
  * Getters *
@@ -42,6 +20,7 @@ let getters = {
     if (state.ethusd === 0) {
       return 0
     }
+    let web3 = web3Manager.getInstance()
     // ethusd comes in cents per ETH.
     // Rounding @see http://www.jacklmoore.com/notes/rounding-in-javascript/
     let rounded = Number(Math.ceil((100 / state.ethusd) + 'e17') + 'e-17')
@@ -49,6 +28,7 @@ let getters = {
   },
 
   tokenPriceWei (state, getters) {
+    let web3 = web3Manager.getInstance()
     return web3.utils.toBN(getters.pixelPriceWei).mul(web3.utils.toBN(100))
   },
 
@@ -69,6 +49,7 @@ let getters = {
   },
 
   claimedPixels () {
+    let web3 = web3Manager.getInstance()
     return state.lockedTokens ? state.lockedTokens.mul(web3.utils.toBN(100)).toNumber() : 0
   },
 
@@ -83,18 +64,22 @@ let getters = {
   },
 
   oracleFundsEth () {
+    let web3 = web3Manager.getInstance()
     return state.oracleFunds ? Number(web3.utils.fromWei(state.oracleFunds)).toFixed(8) : 0
   },
 
   contractFundsEth () {
+    let web3 = web3Manager.getInstance()
     return state.contractFunds ? Number(web3.utils.fromWei(state.contractFunds)).toFixed(8) : 0
   },
 
   withdrawableBalanceEth () {
+    let web3 = web3Manager.getInstance()
     return state.withdrawableBalance ? Number(web3.utils.fromWei(state.withdrawableBalance)).toFixed(8) : 0
   },
 
   withdrawableBalanceEthShort () {
+    let web3 = web3Manager.getInstance()
     return state.withdrawableBalance ? Number(web3.utils.fromWei(state.withdrawableBalance)).toFixed(3) : 0
   },
 

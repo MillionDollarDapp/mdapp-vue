@@ -2,8 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import state from './state'
 import getters from './getters'
-import getWeb3 from '../util/getWeb3'
-import pollWeb3 from '../util/pollWeb3'
+import web3Manager from '../util/web3Manager'
 import pollSaleContract from '../util/pollSaleContract'
 import pollTokenContract from '../util/pollTokenContract'
 import pollMdappContract from '../util/pollMdappContract'
@@ -20,22 +19,34 @@ export const store = new Vuex.Store({
   state,
   getters,
   mutations: {
-    registerWeb3Instance (state, payload) {
-      let result = payload
+    setWeb3Instance (state, payload) {
+      state.web3.web3Instance = () => payload.web3
+      state.web3.isInjected = payload.injected
+      state.trigger.web3Instance++
+    },
+    setWeb3Watcher (state, payload) {
+      state.web3.web3Watcher = () => payload
+      state.trigger.web3Watcher++
+    },
+    setConnectionState (state, payload) {
+      state.web3.connectionState = payload
+    },
+    setWeb3Data (state, payload) {
       let web3Copy = state.web3
-      web3Copy.coinbase = result.coinbase
-      web3Copy.networkId = result.networkId
-      web3Copy.balance = result.balance
-      web3Copy.balanceEth = parseFloat(result.balanceEth)
-      web3Copy.isInjected = result.injectedWeb3
-      web3Copy.block = result.block
-      web3Copy.web3Instance = result.web3
-      web3Copy.web3Watcher = result.web3Watcher
+      web3Copy.coinbase = payload.coinbase
+      web3Copy.networkId = payload.networkId
+      web3Copy.block = payload.block
+
+      if (payload.coinbase) {
+        web3Copy.balance = payload.balance
+        web3Copy.balanceEth = parseFloat(payload.balanceEth)
+      }
       state.web3 = web3Copy
-      pollWeb3()
+      state.trigger.web3Data++
     },
     pollWeb3Instance (state, payload) {
-      let coinbaseChanged = payload.coinbase !== state.web3.coinbase
+      let oldCoinbase = state.web3.coinbase
+      let coinbaseChanged = payload.coinbase !== oldCoinbase
 
       if (payload.hasOwnProperty('coinbase')) {
         state.web3.balance = payload.balance
@@ -58,21 +69,26 @@ export const store = new Vuex.Store({
         Vue.set(state.helperProgress, 4, false)
         Vue.set(state.helperProgress, 5, false)
 
-        // Reinitialize user
-        filters.initUser()
+        // Reinitialize user if it changed
+        if (oldCoinbase) filters.initUser()
       }
     },
     // Contract registration
     registerSaleContractInstance (state, payload) {
-      state.saleContractInstance = () => payload[0]
-      state.saleContractInstanceWatcher = () => payload[1]
+      state.saleContractInstance = !payload[0] ? null : () => payload[0]
+      state.saleContractInstanceWatcher = !payload[1] ? null : () => payload[1]
     },
     registerMdappContractInstance (state, payload) {
-      state.mdappContractInstance = () => payload[0]
-      state.mdappContractInstanceWatcher = () => payload[1]
+      state.mdappContractInstance = !payload[0] ? null : () => payload[0]
+      state.mdappContractInstanceWatcher = !payload[1] ? null : () => payload[1]
     },
     registerTokenContractInstance (state, payload) {
-      state.tokenContractInstance = () => payload
+      state.tokenContractInstance = !payload ? null : () => payload
+    },
+    unsetContracts (state) {
+      state.saleContractInstance = null
+      state.mdappContractInstance = null
+      state.tokenContractInstance = null
     },
 
     // Contract constants initialization
@@ -194,6 +210,13 @@ export const store = new Vuex.Store({
     // Filter processing
     setInitBlock (state, payload) {
       state.initBlock = payload
+
+      state.nextBlockUserClaim = payload
+      state.nextBlockUserEdit = payload
+      state.nextBlockUserRelease = payload
+    },
+    setNextFilterBlock (state, payload) {
+      state[`nextBlock${payload.filter}`] = payload.block
     },
     addToQueue (state, payload) {
       let id = payload.target + '_' + payload.ad.id
@@ -308,16 +331,21 @@ export const store = new Vuex.Store({
   },
 
   actions: {
-    async registerWeb3 ({commit, dispatch}) {
-      let result = await getWeb3()
+    setWeb3Instance ({commit, dispatch}, payload) {
+      if (payload.injected) dispatch('setHelperProgress', ['metamask', true])
+      commit('setWeb3Instance', payload)
+    },
+    setWeb3Watcher ({commit}, payload) {
+      commit('setWeb3Watcher', payload)
+    },
+    setConnectionState ({commit}, payload) {
+      commit('setConnectionState', payload)
+    },
 
-      // Set user progress for the helper component.
-      if (result.injectedWeb3) dispatch('setHelperProgress', ['metamask', true])
-      if (result.coinbase) dispatch('setHelperProgress', ['unlock', true])
-      if (result.balance && result.balance > '0') dispatch('setHelperProgress', ['ether', true])
-
-      // Store result
-      commit('registerWeb3Instance', result)
+    setWeb3Data ({commit, dispatch}, payload) {
+      if (payload.coinbase) dispatch('setHelperProgress', ['unlock', true])
+      if (payload.balance && payload.balance.gt(web3Manager.getInstance().utils.toBN(0))) dispatch('setHelperProgress', ['ether', true])
+      commit('setWeb3Data', payload)
     },
     pollWeb3 ({commit}, payload) {
       commit('pollWeb3Instance', payload)
@@ -340,6 +368,9 @@ export const store = new Vuex.Store({
       let result = await getTokenContract()
       commit('registerTokenContractInstance', result)
       pollTokenContract()
+    },
+    unsetContracts ({commit}) {
+      commit('unsetContracts')
     },
 
     // Contract constants initialization
@@ -372,6 +403,9 @@ export const store = new Vuex.Store({
     // Filter processing
     setInitBlock ({commit}, payload) {
       commit('setInitBlock', payload)
+    },
+    setNextFilterBlock ({commit}, payload) {
+      commit('setNextFilterBlock', payload)
     },
     initUserAds ({commit}, payload) {
       commit('initUserAds', payload)

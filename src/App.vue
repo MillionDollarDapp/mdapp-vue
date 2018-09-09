@@ -60,8 +60,7 @@
 </template>
 
 <script>
-import Raven from 'raven-js'
-import filters from './util/filters/filters'
+import web3manager from './util/web3Manager'
 import HelperList from '@/components/helperList'
 import Navbar from '@/components/navbar'
 import FooterNav from '@/components/footerNav'
@@ -69,21 +68,7 @@ import FooterNav from '@/components/footerNav'
 export default {
   name: 'App',
   beforeCreate () {
-    (async () => {
-      try {
-        await this.$store.dispatch('registerWeb3')
-        await Promise.all([
-          this.$store.dispatch('getSaleContractInstance'),
-          this.$store.dispatch('getMdappContractInstance'),
-          this.$store.dispatch('getTokenContractInstance')
-        ])
-
-        filters.init()
-      } catch (error) {
-        console.error('App beforeCreate:', error)
-        Raven.captureException(error)
-      }
-    })()
+    web3manager.init()
   },
   components: {
     HelperList,

@@ -156,6 +156,7 @@ import Raven from 'raven-js'
 import { mapState } from 'vuex'
 import mdappContract from '../util/interactions/mdappContract'
 import { newTransaction } from '../util/transaction'
+import web3Manager from '../util/web3Manager'
 
 import VueCountdown from '@xkeshi/vue-countdown'
 
@@ -216,7 +217,7 @@ export default {
     },
 
     web3 () {
-      return this.$store.state.web3.web3Instance()
+      return web3Manager.getInstance()
     }
   },
 
@@ -278,7 +279,6 @@ export default {
       this.$emit('buyBtnPressed')
     },
     async claimBtnPressed () {
-      // TODO: Can this be rewritten with async/await somehow?
       let x = this.selectedArea.topLeft[0]
       let y = this.selectedArea.topLeft[1]
       let w = this.selectedArea.getWidth()

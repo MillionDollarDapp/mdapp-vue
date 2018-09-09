@@ -1,8 +1,16 @@
 import Raven from 'raven-js'
+import web3Manager from './web3Manager'
 import {store} from '../store/'
 
+let pollWeb3Interval = null
+
 const pollWeb3Function = async () => {
-  let web3 = store.state.web3.web3Instance()
+  let web3 = web3Manager.getInstance()
+
+  if (!web3Manager.isConnected) {
+    clearInterval(pollWeb3Interval)
+    return
+  }
 
   if (web3) {
     let hadCoinbase = store.state.web3.coinbase
@@ -64,7 +72,7 @@ const pollWeb3Function = async () => {
 
 const pollWeb3 = function (state) {
   pollWeb3Function()
-  setInterval(() => { pollWeb3Function() }, 1000)
+  pollWeb3Interval = setInterval(() => { pollWeb3Function() }, 1000)
 }
 
 export default pollWeb3

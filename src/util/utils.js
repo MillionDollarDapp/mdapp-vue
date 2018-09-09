@@ -1,5 +1,6 @@
 import multihashes from 'multihashes'
 import {store} from '../store/'
+import web3Manager from './web3Manager'
 
 /**
  * This file contains various helper functions.
@@ -133,7 +134,7 @@ const utils = {
   },
 
   multihash2image (hashFunction, digest, size, storageEngine) {
-    let web3 = store.state.web3.web3Instance()
+    let web3 = web3Manager.getInstance()
     storageEngine = web3.utils.hexToAscii(storageEngine)
 
     if (storageEngine === 'ipfs') {
@@ -151,7 +152,7 @@ const utils = {
    * @param ads a map of ads or a single ad object
    */
   setBlockTimes (ads) {
-    let web3 = store.state.web3.web3Instance()
+    let web3 = web3Manager.getInstance()
     let blocks = new Map()
     let promises = []
 

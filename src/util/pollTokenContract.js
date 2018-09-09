@@ -1,8 +1,16 @@
 import Raven from 'raven-js'
 import {store} from '../store/'
+import web3Manager from './web3Manager'
+
+let pollTokenInterval = null
 
 const pollTokenContractFunction = async () => {
-  let web3 = store.state.web3.web3Instance()
+  let web3 = web3Manager.getInstance()
+
+  if (!web3Manager.isConnected) {
+    clearInterval(pollTokenInterval)
+    return
+  }
 
   if (web3 && store.state.tokenContractInstance !== null && store.state.web3.coinbase) {
     try {
@@ -51,14 +59,14 @@ const pollTokenContractFunction = async () => {
   }
 }
 
-const pollTokenContract = function (state) {
+const pollTokenContract = function () {
   if (store.state.tokenContractInstance === null) {
     setTimeout(() => { pollTokenContract() }, 100)
     return
   }
 
   pollTokenContractFunction()
-  setInterval(() => { pollTokenContractFunction() }, 15000)
+  pollTokenInterval = setInterval(() => { pollTokenContractFunction() }, 15000)
 }
 
 export default pollTokenContract

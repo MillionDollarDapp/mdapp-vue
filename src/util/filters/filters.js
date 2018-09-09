@@ -4,11 +4,17 @@ import saleFilter from './saleFilter'
 import { watchTransaction } from '../transaction'
 import {store} from '../../store/'
 import utils from '../utils'
+import web3Manager from '../web3Manager'
 
 const filters = {
+  _inited: false,
+
   init () {
+    if (this._inited) return
+
     if (store.state.web3.block === null ||
-      store.state.mdappContractInstance === null) {
+      store.state.mdappContractInstance === null ||
+      !web3Manager.isConnected) {
       setTimeout(() => { this.init() }, 100)
       return
     }
@@ -16,6 +22,20 @@ const filters = {
 
     this.initUser()
     this.initOtherAds()
+
+    this._inited = true
+  },
+
+  handleDisconnect () {
+    adFilter.stopWatchUser()
+    adFilter.stopWatchAll()
+    saleFilter.stopWatchUser()
+  },
+
+  handleReconnect () {
+    adFilter.watchUserAds()
+    adFilter.watchAllAds()
+    saleFilter.watchUser()
   },
 
   async initUser () {

@@ -6,9 +6,13 @@ import { AD_MAXLENGTH } from '../constants/adMaxlength'
 
 const adFilter = {
 
-  _claimFilter: null,
-  _releaseFilter: null,
-  _editAdFilter: null,
+  _userClaimFilter: null,
+  _userReleaseFilter: null,
+  _userEditAdFilter: null,
+  _allClaimFilter: null,
+  _allReleaseFilter: null,
+  _allEditAdFilter: null,
+  _allNSFWFilter: null,
 
   /**
    * Get all ads and involved transactions of the current user. Also considers releases.
@@ -70,7 +74,6 @@ const adFilter = {
       }
     } catch (error) {
       console.error('getUserAds:', error)
-      Raven.captureException(error)
     }
 
     return { ads: ads, txs: txs }
@@ -173,21 +176,24 @@ const adFilter = {
     txs.set(log.blockNumber, blockTxs)
   },
 
-  watchUserAds () {
-    if (this._claimFilter) {
-      // Stop old filters
-      this._claimFilter.unsubscribe()
-      this._releaseFilter.unsubscribe()
-      this._editAdFilter.unsubscribe()
+  stopWatchUser () {
+    if (this._userClaimFilter) {
+      this._userClaimFilter.unsubscribe()
+      this._userReleaseFilter.unsubscribe()
+      this._userEditAdFilter.unsubscribe()
     }
+  },
+  watchUserAds () {
+    this.stopWatchUser()
 
-    this._claimFilter = store.state.mdappContractInstanceWatcher().events.Claim({
+    this._userClaimFilter = store.state.mdappContractInstanceWatcher().events.Claim({
       filter: { owner: store.state.web3.coinbase },
-      fromBlock: store.state.initBlock,
+      fromBlock: store.state.nextBlockUserClaim,
       toBlock: 'latest'
     })
       .on('data', event => {
         this._processWatchLog(event, 'user')
+        store.dispatch('setNextFilterBlock', { filter: 'UserClaim', block: event.blockNumber + 1 })
       })
       .on('change', event => {
         Raven.captureMessage('A claim event has been removed from blockchain', {
@@ -200,13 +206,14 @@ const adFilter = {
         Raven.captureException(error)
       })
 
-    this._releaseFilter = store.state.mdappContractInstanceWatcher().events.Release({
+    this._userReleaseFilter = store.state.mdappContractInstanceWatcher().events.Release({
       filter: { owner: store.state.web3.coinbase },
-      fromBlock: store.state.initBlock,
+      fromBlock: store.state.nextBlockUserRelease,
       toBlock: 'latest'
     })
       .on('data', event => {
         this._processWatchLog(event, 'user')
+        store.dispatch('setNextFilterBlock', { filter: 'UserRelease', block: event.blockNumber + 1 })
       })
       .on('change', event => {
         Raven.captureMessage('A release event has been removed from blockchain', {
@@ -219,13 +226,14 @@ const adFilter = {
         Raven.captureException(error)
       })
 
-    this._editAdFilter = store.state.mdappContractInstanceWatcher().events.EditAd({
+    this._userEditAdFilter = store.state.mdappContractInstanceWatcher().events.EditAd({
       filter: { owner: store.state.web3.coinbase },
-      fromBlock: store.state.initBlock,
+      fromBlock: store.state.nextBlockUserEdit,
       toBlock: 'latest'
     })
       .on('data', event => {
         this._processWatchLog(event, 'user')
+        store.dispatch('setNextFilterBlock', { filter: 'UserEdit', block: event.blockNumber + 1 })
       })
       .on('change', event => {
         Raven.captureMessage('An editAd event has been removed from blockchain', {
@@ -411,7 +419,7 @@ const adFilter = {
         this._processInitAllLog(ads, parseInt(log.returnValues.id), coinbase, log)
       }
 
-      // 3th get NSFWs
+      // 3rd get NSFWs
       let pastNSFWs = await store.state.mdappContractInstanceWatcher().getPastEvents('ForceNSFW', {
         filter: { id: adIds },
         fromBlock: process.env.DAPP_GENESIS,
@@ -432,14 +440,25 @@ const adFilter = {
     return ads
   },
 
+  stopWatchAll () {
+    if (this._allClaimFilter) {
+      this._allClaimFilter.unsubscribe()
+      this._allReleaseFilter.unsubscribe()
+      this._allEditAdFilter.unsubscribe()
+      this._allNSFWFilter.unsubscribe()
+    }
+  },
   watchAllAds () {
+    this.stopWatchAll()
+
     // Claim watching
-    store.state.mdappContractInstanceWatcher().events.Claim({
-      fromBlock: store.state.initBlock,
+    this._allClaimFilter = store.state.mdappContractInstanceWatcher().events.Claim({
+      fromBlock: store.state.nextBlockAllClaim,
       toBlock: 'latest'
     })
       .on('data', event => {
         this._processWatchLog(event, 'all')
+        store.dispatch('setNextFilterBlock', { filter: 'AllClaim', block: event.blockNumber + 1 })
       })
       .on('changed', event => {
         Raven.captureMessage('A claim event has been removed from blockchain', {
@@ -453,12 +472,13 @@ const adFilter = {
       })
 
     // Release watching
-    store.state.mdappContractInstanceWatcher().events.Release({
-      fromBlock: store.state.initBlock,
+    this._allReleaseFilter = store.state.mdappContractInstanceWatcher().events.Release({
+      fromBlock: store.state.nextBlockAllRelease,
       toBlock: 'latest'
     })
       .on('data', event => {
         this._processWatchLog(event, 'all')
+        store.dispatch('setNextFilterBlock', { filter: 'AllRelease', block: event.blockNumber + 1 })
       })
       .on('changed', event => {
         Raven.captureMessage('A release event has been removed from blockchain', {
@@ -472,12 +492,13 @@ const adFilter = {
       })
 
     // EditAd watching
-    store.state.mdappContractInstanceWatcher().events.EditAd({
-      fromBlock: store.state.initBlock,
+    this._allEditAdFilter = store.state.mdappContractInstanceWatcher().events.EditAd({
+      fromBlock: store.state.nextBlockAllEdit,
       toBlock: 'latest'
     })
       .on('data', event => {
         this._processWatchLog(event, 'all')
+        store.dispatch('setNextFilterBlock', { filter: 'AllEdit', block: event.blockNumber + 1 })
       })
       .on('changed', event => {
         Raven.captureMessage('An edit event has been removed from blockchain', {
@@ -491,12 +512,13 @@ const adFilter = {
       })
 
     // ForceNSFW watching
-    store.state.mdappContractInstanceWatcher().events.ForceNSFW({
-      fromBlock: store.state.initBlock,
+    this._allNSFWFilter = store.state.mdappContractInstanceWatcher().events.ForceNSFW({
+      fromBlock: store.state.nextBlockAllNSFW,
       toBlock: 'pending'
     })
       .on('data', event => {
         store.dispatch('forceNSFW', parseInt(event.returnValues.id))
+        store.dispatch('setNextFilterBlock', { filter: 'AllNSFW', block: event.blockNumber + 1 })
       })
       .on('changed', event => {
         Raven.captureMessage('An ForceNSFW event has been removed from blockchain', {

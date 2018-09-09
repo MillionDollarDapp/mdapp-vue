@@ -150,6 +150,7 @@ import mdappContract from '../util/interactions/mdappContract'
 import saleContract from '../util/interactions/saleContract'
 import { newTransaction } from '../util/transaction'
 import utils from '../util/utils'
+import web3Manager from '../util/web3Manager'
 import Raven from 'raven-js'
 
 export default {
@@ -185,7 +186,7 @@ export default {
     },
 
     web3 () {
-      return this.$store.state.web3.web3Instance()
+      return web3Manager.getInstance()
     }
   },
 

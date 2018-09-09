@@ -1,6 +1,7 @@
 import Raven from 'raven-js'
 import {store} from '../../store/'
 import utils from '../utils'
+import web3Manager from '../web3Manager'
 import {watchTransaction} from '../transaction'
 
 const saleFilter = {
@@ -71,21 +72,24 @@ const saleFilter = {
     }
   },
 
-  _recruitementFilter: null,
+  _recruitmentFilter: null,
 
-  watchUser () {
-    if (this._recruitementFilter) {
-      // Stop old filters
-      this._recruitementFilter.unsubscribe()
+  stopWatchUser () {
+    if (this._recruitmentFilter) {
+      this._recruitmentFilter.unsubscribe()
     }
+  },
+  watchUser () {
+    this.stopWatchUser()
 
-    this._recruitementFilter = store.state.saleContractInstanceWatcher().events.Recruited({
+    this._recruitmentFilter = store.state.saleContractInstanceWatcher().events.Recruited({
       filter: { recruiter: store.state.web3.coinbase },
-      fromBlock: store.state.initBlock,
+      fromBlock: store.state.nextBlockUserRecruitments,
       toBlock: 'latest'
     })
       .on('data', event => {
         this._processWatchLog(event)
+        store.dispatch('setNextFilterBlock', { filter: 'UserRecruitments', block: event.blockNumber + 1 })
       })
       .on('changed', event => {
         Raven.captureMessage('A recruitment event has been removed from blockchain', {
@@ -107,7 +111,7 @@ const saleFilter = {
    * @private
    */
   _processLog (txs, log) {
-    let web3 = store.state.web3.web3Instance()
+    let web3 = web3Manager.getInstance()
 
     let tx = {
       hash: log.transactionHash,
@@ -148,7 +152,7 @@ const saleFilter = {
   },
 
   _processWatchLog (log) {
-    let web3 = store.state.web3.web3Instance()
+    let web3 = web3Manager.getInstance()
     let tx = store.state.transactions.get(log.transactionHash)
 
     let values = log.returnValues

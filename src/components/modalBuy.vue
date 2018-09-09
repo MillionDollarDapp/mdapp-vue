@@ -118,6 +118,7 @@ import { Edit3Icon } from 'vue-feather-icons'
 import saleContract from '../util/interactions/saleContract'
 import { newTransaction } from '../util/transaction'
 import utils from '../util/utils'
+import web3Manager from '../util/web3Manager'
 
 export default {
   name: 'modalBuy',
@@ -178,7 +179,7 @@ export default {
       }
     },
     web3 () {
-      return this.$store.state.web3.web3Instance()
+      return web3Manager.getInstance()
     }
   },
 

@@ -1,10 +1,16 @@
 import Raven from 'raven-js'
 import {store} from '../store/'
+import web3Manager from './web3Manager'
 
-var pollSaleInterval = null
+let pollSaleInterval = null
 
 const pollSaleContractFunction = async () => {
-  let web3 = store.state.web3.web3Instance()
+  let web3 = web3Manager.getInstance()
+
+  if (!web3Manager.isConnected) {
+    clearInterval(pollSaleInterval)
+    return
+  }
 
   if (web3 && store.state.saleContractInstance !== null) {
     try {
@@ -69,14 +75,11 @@ const pollSaleContractFunction = async () => {
   }
 }
 
-const pollSaleContract = function (state) {
+const pollSaleContract = function () {
   pollSaleContractFunction()
 
   if (!store.state.soldOut) {
-    // Even though avg block time is 15s we check every 10sec to stay always up to date.
-    pollSaleInterval = setInterval(() => {
-      pollSaleContractFunction()
-    }, 10000)
+    pollSaleInterval = setInterval(() => { pollSaleContractFunction() }, 15000)
   }
 }
 

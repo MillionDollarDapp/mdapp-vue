@@ -119,6 +119,7 @@ import ModalBuy from '@/components/modalBuy'
 import utils from '../util/utils'
 import saleContract from '../util/interactions/saleContract'
 import {newTransaction} from '../util/transaction'
+import web3Manger from '../util/web3Manager'
 import { UserIcon, ArrowRightIcon, ArrowLeftIcon, ActivityIcon, FileTextIcon } from 'vue-feather-icons'
 
 export default {
@@ -150,7 +151,7 @@ export default {
       return this.$store.state.web3
     },
     web3 () {
-      return this.$store.state.web3.web3Instance()
+      return web3Manger.getInstance()
     },
     transactions () {
       // Conditions is always true and is only used to trigger a recalculation.

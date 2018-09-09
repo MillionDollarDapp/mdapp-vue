@@ -1,5 +1,6 @@
 import Raven from 'raven-js'
 import {store} from '../../store/'
+import web3Manager from '../web3Manager'
 
 export default {
   // Only contract owner can force-allow tranferability of tokens.
@@ -62,7 +63,7 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
-      let web3 = store.state.web3.web3Instance()
+      let web3 = web3Manager.getInstance()
 
       storageEnginge = storageEnginge === undefined ? web3.utils.asciiToHex('ipfs') : web3.utils.asciiToHex(storageEnginge)
       let gas = await store.state.mdappContractInstance().methods.editAd(adId, link, title, text, contact, nsfw, digest, hashFunction, size, storageEnginge).estimateGas({from: store.state.web3.coinbase})

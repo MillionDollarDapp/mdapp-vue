@@ -1,6 +1,7 @@
 let state = {
   web3: {
-    isInjected: false,
+    isInjected: null,
+    connectionState: 'disconnected',
     web3Instance: null,
     web3Watcher: null,
     networkId: null,
@@ -19,6 +20,12 @@ let state = {
 
   // Helper for triggering changes in unreactive data structures (like Map())
   trigger: {
+    web3Data: 1,
+    web3Instance: 1,
+    web3Watcher: 1,
+    mdapp: 1,
+    sale: 1,
+    token: 1,
     tx: 1,
     txWatch: 1,
     myAds: 1,
@@ -63,7 +70,7 @@ let state = {
   forceTransferEnable: false,
 
   // Filter results
-  initBlock: process.env.START_BLOCK, // will be set to the blocknumber at which we initially loaded the state. Start from here watching.
+  initBlock: process.env.DAPP_GENESIS, // will be set to the blocknumber at which we initially loaded the state. Start from here watching.
   myAds: new Map(), // current users ads (including claims with placeholder ads)
   allAds: new Map(), // general ads (including claims with placeholder ads)
   blockingPixels: new Set(), // [pixelblock] = true if it is claimed by anyone. Pixelblock ranges from 0 to 9999. Calc it with: x/10 + y/10 * 125
@@ -71,6 +78,17 @@ let state = {
   adsQueueIsWaiting: false, // a way for our filters to trigger the canvas component to process the queue
   forceNSFW: new Set(), // holds all adIds which have been force to NSFW by the contract owner
   adsWithNSFW: 0, // number of the active ads with the NSFW flag set to true
+
+  // Filter positions.
+  nextBlockUserClaim: process.env.DAPP_GENESIS,
+  nextBlockUserEdit: process.env.DAPP_GENESIS,
+  nextBlockUserRelease: process.env.DAPP_GENESIS,
+  nextBlockUserRecruitments: process.env.DAPP_GENESIS,
+
+  nextBlockAllClaim: process.env.DAPP_GENESIS,
+  nextBlockAllEdit: process.env.DAPP_GENESIS,
+  nextBlockAllRelease: process.env.DAPP_GENESIS,
+  nextBlockAllNSFW: process.env.DAPP_GENESIS,
 
   // User transactions
   transactions: new Map(),

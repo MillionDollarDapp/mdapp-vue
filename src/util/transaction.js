@@ -1,5 +1,6 @@
 import Raven from 'raven-js'
 import {store} from '../store/'
+import web3Manager from './web3Manager'
 
 /**
  * Adds a new transaction to our store.
@@ -103,7 +104,7 @@ const newTransaction = (hash, op, data, status) => {
  */
 const watchTransaction = async (tx) => {
   try {
-    let web3 = store.state.web3.web3Instance()
+    let web3 = web3Manager.getInstance()
     let receipt = await web3.eth.getTransactionReceipt(tx.hash)
 
     let continueWatching = true
