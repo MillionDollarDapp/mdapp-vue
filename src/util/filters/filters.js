@@ -27,9 +27,10 @@ const filters = {
   },
 
   handleDisconnect () {
-    adFilter.stopWatchUser()
-    adFilter.stopWatchAll()
-    saleFilter.stopWatchUser()
+    // We can't unsubscribe when there's no connection.
+    // adFilter.stopWatchUser()
+    // adFilter.stopWatchAll()
+    // saleFilter.stopWatchUser()
   },
 
   handleReconnect () {

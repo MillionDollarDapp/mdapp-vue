@@ -3,6 +3,7 @@ import {store} from '../../store/'
 import utils from '../utils'
 import { watchTransaction } from '../transaction'
 import { AD_MAXLENGTH } from '../constants/adMaxlength'
+import web3Manager from '../web3Manager'
 
 const adFilter = {
 
@@ -74,6 +75,9 @@ const adFilter = {
       }
     } catch (error) {
       console.error('getUserAds:', error)
+      if (error.message.toLowerCase().indexOf('connect') !== -1) {
+        web3Manager.detectedDisconnect()
+      }
     }
 
     return { ads: ads, txs: txs }
@@ -203,7 +207,9 @@ const adFilter = {
       })
       .on('error', error => {
         console.error('User claim watch:', error)
-        Raven.captureException(error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
       })
 
     this._userReleaseFilter = store.state.mdappContractInstanceWatcher().events.Release({
@@ -223,7 +229,9 @@ const adFilter = {
       })
       .on('error', error => {
         console.error('User release watch:', error)
-        Raven.captureException(error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
       })
 
     this._userEditAdFilter = store.state.mdappContractInstanceWatcher().events.EditAd({
@@ -243,7 +251,9 @@ const adFilter = {
       })
       .on('error', error => {
         console.error('User editAd watch:', error)
-        Raven.captureException(error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
       })
   },
 
@@ -434,7 +444,9 @@ const adFilter = {
       }
     } catch (error) {
       console.error('getAllAds:', error)
-      Raven.captureException(error)
+      if (error.message.toLowerCase().indexOf('connect') !== -1) {
+        web3Manager.detectedDisconnect()
+      }
     }
 
     return ads
@@ -468,7 +480,9 @@ const adFilter = {
       })
       .on('error', error => {
         console.error('Other watch claim:', error)
-        Raven.captureException(error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
       })
 
     // Release watching
@@ -488,7 +502,9 @@ const adFilter = {
       })
       .on('error', error => {
         console.error('Other watch release:', error)
-        Raven.captureException(error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
       })
 
     // EditAd watching
@@ -508,7 +524,9 @@ const adFilter = {
       })
       .on('error', error => {
         console.error('Other watch editAd:', error)
-        Raven.captureException(error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
       })
 
     // ForceNSFW watching
@@ -528,7 +546,9 @@ const adFilter = {
       })
       .on('error', error => {
         console.error('Other watch forceNSFW:', error)
-        Raven.captureException(error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
       })
   },
 

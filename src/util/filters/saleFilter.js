@@ -68,7 +68,9 @@ const saleFilter = {
       return txs
     } catch (error) {
       console.error('getUserPurchases:', error)
-      Raven.captureException(error)
+      if (error.message.toLowerCase().indexOf('connect') !== -1) {
+        web3Manager.detectedDisconnect()
+      }
     }
   },
 
@@ -99,7 +101,9 @@ const saleFilter = {
       })
       .on('error', error => {
         console.error('Watch user recruitments:', error)
-        Raven.captureException(error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
       })
   },
 

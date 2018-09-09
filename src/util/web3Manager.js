@@ -8,6 +8,7 @@ const web3Manager = {
   _customProvider: null,
   _connectionAttempts: 0,
   _lastConnectionAttempt: null,
+  _isReconnecting: false,
 
   /**
    * Setup web3 and web3Watcher instances.
@@ -49,9 +50,23 @@ const web3Manager = {
   },
 
   /**
+   * Called by event watchers if they error out because of connection problems. Provider.on('end') doesn't fire
+   * always, unfortunately.
+   */
+  detectedDisconnect () {
+    if (!this._isReconnecting) {
+      console.log('detected disconnect')
+      this._isReconnecting = true
+      this._handleDisconnect()
+    }
+  },
+
+  /**
    * Establish a new connection attempt and increment a delay between each failed attempt.
    */
   async _reconnect () {
+    this._isReconnecting = true
+
     // Reset connectionAttempts only after a certain amount of connection stability.
     if (!this._lastConnectionAttempt && Math.floor(Date.now() / 1000) - this._lastConnectionAttempt > 30) {
       this._connectionAttempts = 0
@@ -68,9 +83,6 @@ const web3Manager = {
     console.log('reconnecting')
     this._customProvider = null
     window.web3Watcher.setProvider(this._getCustomProvider())
-
-    pollWeb3()
-    filters.handleReconnect()
   },
 
   /**
@@ -106,6 +118,7 @@ const web3Manager = {
    */
   async _handleConnect () {
     this.isConnected = true
+    this._isReconnecting = false
     store.dispatch('setConnectionState', 'connected')
     console.log(`connected to ${process.env.WEB3_ENDPOINT}`)
 
@@ -119,7 +132,9 @@ const web3Manager = {
       store.dispatch('getTokenContractInstance')
     ])
 
+    pollWeb3()
     filters.init()
+    filters.handleReconnect()
   },
 
   /**
@@ -127,6 +142,7 @@ const web3Manager = {
    */
   _handleDisconnect () {
     this.isConnected = false
+    this._isReconnecting = false
     store.dispatch('setConnectionState', 'diconnected')
     console.log('connection lost')
     store.dispatch('unsetContracts')
