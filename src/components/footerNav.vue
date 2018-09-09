@@ -39,10 +39,11 @@
             <div class="label">Endpoint:</div>
             <div class="value">{{ endpoint }}</div>
           </div>
-          <div class="d-flex">
-            <div class="label">Status:</div>
-            <div class="value">{{ this.$store.state.web3.connectionState }}</div>
-          </div>
+          <!--Too unreliable information from web3:-->
+          <!--<div class="d-flex">-->
+            <!--<div class="label">Status:</div>-->
+            <!--<div class="value">{{ this.$store.state.web3.connectionState }}</div>-->
+          <!--</div>-->
         </div>
       </div>
     </div>

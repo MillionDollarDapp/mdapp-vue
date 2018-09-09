@@ -33,14 +33,22 @@
                   <b-col md="auto" class="p-0 icon-col"><arrow-right-icon/></b-col>
                   <b-col md="auto">
                     <b-nav-text>
-                      <b-badge v-b-tooltip.html.hover="balanceTooltip">{{ this.$store.getters.unlockedTokens }} MDAPP</b-badge>
+                      <b-badge v-b-tooltip.html.hover="balanceTooltip">
+                        <template v-if="this.$store.getters.unlockedTokens !== null">
+                          {{ this.$store.getters.unlockedTokens }}
+                        </template>
+                        <template v-else>
+                          <img src="@/assets/throbber/throbber-light-grey.gif" width="11px" height="11px"/>
+                        </template>
+                        MDAPP
+                      </b-badge>
                     </b-nav-text>
                   </b-col>
                   <b-col md="auto" class="p-0 icon-col icons-nospace"><arrow-left-icon/><arrow-right-icon/></b-col>
                   <b-col md="auto">
                     <b-nav-text>
-                      <b-badge v-if="this.$store.getters.claimedPixels > 0" v-b-tooltip.hover title="Amount of claimed pixels">{{ this.$store.getters.claimedPixels }} Pixels</b-badge>
-                      <b-badge v-else>0 Pixels</b-badge>
+                      <b-badge v-if="this.$store.getters.claimedPixels !== null" v-b-tooltip.hover title="Amount of claimed pixels">{{ this.$store.getters.claimedPixels }} Pixels</b-badge>
+                      <b-badge v-else><img src="@/assets/throbber/throbber-light-grey.gif" width="11px" height="11px"/> Pixels</b-badge>
                     </b-nav-text>
                   </b-col>
                 </template>
@@ -250,24 +258,30 @@ export default {
     },
 
     balanceTooltip () {
-      return `<div class="d-flex flex-column">
+      let output = `<div class="d-flex flex-column">
         <div class="d-flex justify-content-between">
-          <div>Transferable:</div><div>${this.$store.state.transferableTokens} MDAPP</div>
-        </div>
-        <div class="d-flex justify-content-between">
-          <div>Locked in pixels:</div><div>${this.$store.state.lockedTokens} MDAPP</div>
+          <div>Transferable:</div><div>${this.$store.state.transferableTokens !== null ? this.$store.state.transferableTokens : `<img src="${require('../assets/throbber/throbber-black.gif')}" width="16px" height="16px"/>`} MDAPP</div>
         </div>
         <div class="d-flex justify-content-between">
-          <div>Unlocked:</div><div>${this.$store.getters.unlockedTokens} MDAPP</div>
+          <div>Locked in pixels:</div><div>${this.$store.state.lockedTokens !== null ? this.$store.state.lockedTokens : `<img src="${require('../assets/throbber/throbber-black.gif')}" width="16px" height="16px"/>`} MDAPP</div>
         </div>
-        <div class="d-flex justify-content-between" v-if="this.$store.state.adStartAll < Date.now()">
-          <div>Presale balance:</div><div>${this.$store.state.presaleTokens} MDAPP</div>
-        </div>
-        <hr/>
+        <div class="d-flex justify-content-between">
+          <div>Unlocked:</div><div>${this.$store.getters.unlockedTokens !== null ? this.$store.getters.unlockedTokens : `<img src="${require('../assets/throbber/throbber-black.gif')}" width="16px" height="16px"/>`} MDAPP</div>
+        </div>`
+
+      if (this.$store.state.adStartAll > Date.now()) {
+        output += `<div class="d-flex justify-content-between">
+            <div>Presale balance:</div><div>${this.$store.state.presaleTokens !== null ? this.$store.state.presaleTokens : `<img src="${require('../assets/throbber/throbber-black.gif')}" width="16px" height="16px"/>`} MDAPP</div>
+          </div>`
+      }
+
+      output += `<hr/>
         <div v-if="!this.$store.getters.transferAllowed" class="text-left">
           Your tokens are transferable once all 10,000 tokens have been distributed.
         </div>
       </div>`
+
+      return output
     },
 
     toggleNSFW () {

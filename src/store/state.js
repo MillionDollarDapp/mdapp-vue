@@ -47,7 +47,7 @@ let state = {
   adStartPresale: null, // ms timestamp
   adStartAll: null, // ms timestamp
   owner: null,
-  presaleTokens: 0,
+  presaleTokens: null,
 
   // Sale contract variables
   ethusd: 0,

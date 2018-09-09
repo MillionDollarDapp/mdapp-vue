@@ -39,18 +39,18 @@ let getters = {
   untransferableTokens (state, getters) {
     if (!getters.transferAllowed) {
       // All tokens are locked until minting is finished.
-      return state.balance ? state.balance.toNumber() : 0
+      return state.balance ? state.balance.toNumber() : null
     }
-    return state.balance ? state.balance.sub(state.transferableTokens).toNumber() : 0
+    return state.balance ? state.balance.sub(state.transferableTokens).toNumber() : null
   },
 
   unlockedTokens () {
-    return state.balance ? state.balance.sub(state.lockedTokens).toNumber() : 0
+    return state.balance !== null && state.lockedTokens !== null ? state.balance.sub(state.lockedTokens).toNumber() : null
   },
 
   claimedPixels () {
     let web3 = web3Manager.getInstance()
-    return state.lockedTokens ? state.lockedTokens.mul(web3.utils.toBN(100)).toNumber() : 0
+    return state.lockedTokens !== null ? state.lockedTokens.mul(web3.utils.toBN(100)).toNumber() : null
   },
 
   // Transfer of token is allowed when either minting is finished or it's explicitly allowed by the contract owner.

@@ -63,6 +63,8 @@ export const store = new Vuex.Store({
       if (coinbaseChanged) {
         state.transactions.clear()
         state.txWatchlist.clear()
+        state.transferableTokens = null
+        state.lockedTokens = null
 
         // Reset helper progress for mdapp, claim and upload
         Vue.set(state.helperProgress, 3, false)
