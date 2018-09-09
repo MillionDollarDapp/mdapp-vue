@@ -9,6 +9,10 @@
         <a href="https://twitter.com/MillionUSD_DAPP" target="_blank" v-b-tooltip.hover title="Twitter">
           <img src="@/assets/Twitter_Social_Icon_Circle_White.png" width="32px" height="32px">
         </a>
+
+        <a href="https://t.me/MillionDollarDapp" target="_blank" v-b-tooltip.hover title="Telegram">
+          <img src="@/assets/telegram_circle_white.png" width="32px" height="32px">
+        </a>
       </div>
 
       <div class="status d-flex">
