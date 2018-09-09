@@ -70,7 +70,6 @@ let state = {
   forceTransferEnable: false,
 
   // Filter results
-  initBlock: process.env.DAPP_GENESIS, // will be set to the blocknumber at which we initially loaded the state. Start from here watching.
   myAds: new Map(), // current users ads (including claims with placeholder ads)
   allAds: new Map(), // general ads (including claims with placeholder ads)
   blockingPixels: new Set(), // [pixelblock] = true if it is claimed by anyone. Pixelblock ranges from 0 to 9999. Calc it with: x/10 + y/10 * 125

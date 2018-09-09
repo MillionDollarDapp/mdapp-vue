@@ -209,11 +209,15 @@ export const store = new Vuex.Store({
     },
     // Filter processing
     setInitBlock (state, payload) {
-      state.initBlock = payload
-
       state.nextBlockUserClaim = payload
       state.nextBlockUserEdit = payload
       state.nextBlockUserRelease = payload
+      state.nextBlockUserRecruitments = payload
+
+      state.nextBlockAllClaim = payload
+      state.nextBlockAllEdit = payload
+      state.nextBlockAllRelease = payload
+      state.nextBlockAllNSFW = payload
     },
     setNextFilterBlock (state, payload) {
       state[`nextBlock${payload.filter}`] = payload.block
