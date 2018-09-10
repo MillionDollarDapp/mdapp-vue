@@ -1,8 +1,15 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" id="mdappViewport" content="width=device-width,initial-scale=1.0,user-scalable=yes">
+# Your Favicon Package
+
+This package was generated with [RealFaviconGenerator](https://realfavicongenerator.net/) [v0.16](https://realfavicongenerator.net/change_log#v0.16)
+
+## Install instructions
+
+To install this package:
+
+Extract this package in <code>&lt;web site&gt;/static/icons/</code>. If your site is <code>http://www.example.com</code>, you should be able to access a file named <code>http://www.example.com/static/icons/favicon.ico</code>.
+
+Insert the following code in the `head` section of your pages:
+
     <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
@@ -12,17 +19,5 @@
     <meta name="msapplication-TileColor" content="#ffc40d">
     <meta name="msapplication-config" content="/static/icons/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
-    <title>MDAPP - Million Dollar Decentralized Application</title>
-    <script>
-      window.onload = function() {
-        if (screen.width < 1280) {
-          var mvp = document.getElementById('mdappViewport')
-          mvp.setAttribute('content','width=1280,user-scalable=yes')
-        }
-      }
-    </script>
-  </head>
-  <body>
-    <div id="app"></div>
-  </body>
-</html>
+
+*Optional* - Check your favicon with the [favicon checker](https://realfavicongenerator.net/favicon_checker)
