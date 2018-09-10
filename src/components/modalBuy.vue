@@ -247,6 +247,7 @@ export default {
                   type: 'success',
                   title: 'Transaction sent',
                   html: `Track its progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+                  heightAuto: false,
                   showConfirmButton: false,
                   onAfterClose: () => {
                     this.$emit('showTxLog')
@@ -269,6 +270,7 @@ export default {
                 type: 'error',
                 title: 'Error',
                 html: `${msg.substr(0, 1).toUpperCase()}${msg.substr(1)}`,
+                heightAuto: false,
                 showConfirmButton: false
               })
             }

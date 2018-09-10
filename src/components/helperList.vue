@@ -211,7 +211,7 @@ export default {
           Velocity(this.openBtnEl, 'callout.tada')
         }
       }
-    }, 5000)
+    }, 8000)
 
     // Listen for window resize
     window.addEventListener('resize', this.initPosition)

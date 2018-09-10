@@ -53,6 +53,7 @@
 <script>
 import { NETWORKS } from '../util/constants/networks'
 import { ExternalLinkIcon } from 'vue-feather-icons'
+import web3Manager from '../util/web3Manager'
 
 export default {
   name: 'footerNav',
@@ -73,7 +74,11 @@ export default {
 
   computed: {
     endpoint () {
-      return process.env.WEB3_ENDPOINT
+      let web3 = web3Manager.getInstance(true)
+      if (this.$store.state.trigger.web3Watcher && this.$store.state.web3.connectionState && web3) {
+        return web3.eth.currentProvider.connection.url
+      }
+      return 'n/a'
     },
 
     web3DataTrigger () {

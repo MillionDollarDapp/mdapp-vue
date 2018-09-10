@@ -64,6 +64,7 @@ import web3manager from './util/web3Manager'
 import HelperList from '@/components/helperList'
 import Navbar from '@/components/navbar'
 import FooterNav from '@/components/footerNav'
+import { NETWORKS } from './util/constants/networks'
 
 export default {
   name: 'App',
@@ -81,6 +82,7 @@ export default {
       highlightClaimed: true, // Toggler. Each time it changes, the users pixels blink
       showDropdownPing: false, // Each switch between true/false triggers the transaction log to show
       showNSFW: false,
+      getNetworkAttempts: 0,
 
       missingTokens: 0,
       pixelPriceWei: 0,
@@ -89,19 +91,57 @@ export default {
   },
 
   mounted () {
-    let content = document.getElementById('welcome-modal-content').innerHTML
-
-    this.$swal({
-      type: 'info',
-      width: 900,
-      customClass: 'welcome-modal',
-      html: content,
-      heightAuto: false,
-      showConfirmButton: false
-    })
+    this.showWelcome()
   },
 
   methods: {
+    showWelcome () {
+      // Wait for getting a web3 connection.
+      if (this.$store.state.web3.networkId === null && this.getNetworkAttempts < 10) {
+        setTimeout(() => { this.showWelcome() }, 100)
+        this.getNetworkAttempts++
+        return
+      }
+
+      if (this.$store.state.web3.networkId === null) {
+        // Inform user about connection problems.
+        this.$swal({
+          type: 'info',
+          html: `We're sorry. It seems like no stable connection could be established to the Ethereum network. Please refresh
+                 this site and/or try it again in a few minutes.`,
+          heightAuto: false,
+          showConfirmButton: false
+        })
+      } else if (this.$store.state.web3.networkId === process.env.DEFAULT_NETWORK) {
+        // Show welcome modal.
+        let content = document.getElementById('welcome-modal-content').innerHTML
+
+        this.$swal({
+          type: 'info',
+          width: 900,
+          customClass: 'welcome-modal',
+          html: content,
+          heightAuto: false,
+          showConfirmButton: false
+        })
+      } else if (process.env.NODE_ENV === 'production') {
+        // Show wrong network modal.
+        let name = NETWORKS[this.$store.state.web3.networkId].name
+
+        this.$swal({
+          type: 'warning',
+          title: 'Beta-Test',
+          html: `The <span class="font-weight-bold">MillionDollarDAPP</span> is currently in beta and only available
+                on the <span class="font-weight-bold">${name}</span> network. Please switch the network at MetaMask.`,
+          heightAuto: false,
+          showConfirmButton: false,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          allowEnterKey: false
+        })
+      }
+    },
+
     blinkClaimed () {
       this.highlightClaimed = !this.highlightClaimed
     },

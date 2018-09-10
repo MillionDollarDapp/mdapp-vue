@@ -199,6 +199,7 @@ export default {
             type: 'error',
             title: 'Error',
             html: msg,
+            heightAuto: false,
             showConfirmButton: false
           })
           newTransaction(txHash, 'withdrawBalance', {error: msg}, 'error')
@@ -207,6 +208,7 @@ export default {
             type: 'success',
             title: 'Transaction sent',
             html: `Transfer is now allowed.<br />Track tx progress on <a href="${this.$store.getters.blockExplorerBaseURL}/tx/${txHash}" target="_blank">etherscan.io</a> or at the top right of this site.`,
+            heightAuto: false,
             showConfirmButton: false
           })
 

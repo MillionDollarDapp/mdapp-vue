@@ -13,16 +13,27 @@ const web3Manager = {
   /**
    * Setup web3 and web3Watcher instances.
    */
-  init () {
+  async init () {
+    let injected
+
     if (typeof window.web3 !== 'undefined' && (store.state.web3.isInjected === null || store.state.web3.isInjected === true)) {
       // Overwrite injected web3 with our own version.
       window.web3 = new Web3(window.web3.currentProvider)
-      store.dispatch('setWeb3Instance', {web3: window.web3, injected: true})
+      injected = true
     } else {
       // Set a default with our custom provider.
       window.web3 = new Web3(this._getCustomProvider())
-      store.dispatch('setWeb3Instance', {web3: window.web3, injected: false})
+      injected = false
     }
+
+    let network = process.env.DEFAULT_NETWORK
+    try {
+      network = await window.web3.eth.net.getId()
+    } catch (error) {
+      console.error('init web3:', error)
+    }
+
+    store.dispatch('setWeb3Instance', {web3: window.web3, injected: injected, networkId: network})
 
     // Create another web3 instance used for event subscriptions.
     window.web3Watcher = new Web3(this._getCustomProvider())
@@ -97,9 +108,12 @@ const web3Manager = {
    * Creates and returns a new custom provider.
    */
   _createCustomProvider () {
-    this._customProvider = new Web3.providers.WebsocketProvider(process.env.WEB3_ENDPOINT)
-    this._customProvider.on('connect', () => {
-      this._handleConnect()
+    let network = store.state.web3.networkId
+    if (!network) network = process.env.DEFAULT_NETWORK
+
+    this._customProvider = new Web3.providers.WebsocketProvider(process.env.WEB3_ENDPOINT[network])
+    this._customProvider.on('connect', (e) => {
+      this._handleConnect(e)
     })
     this._customProvider.on('end', () => {
       this._handleDisconnect()
@@ -117,11 +131,11 @@ const web3Manager = {
   /**
    * Does all necessary operations when web3 established a connection.
    */
-  async _handleConnect () {
+  async _handleConnect (e) {
     this.isConnected = true
     this._isReconnecting = false
     store.dispatch('setConnectionState', 'connected')
-    console.info(`connected to ${process.env.WEB3_ENDPOINT}`)
+    console.info(`connected to ${e.target.url}`)
 
     // Data might have changed.
     await this._getWeb3Data()
