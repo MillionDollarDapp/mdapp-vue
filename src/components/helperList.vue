@@ -207,7 +207,9 @@ export default {
     // Start wobbling the openButton
     this.wobbleInterval = setInterval(() => {
       if (!this.exposed && this.currentStep < 6) {
-        Velocity(this.openBtnEl, 'callout.tada')
+        if (!document.hidden) {
+          Velocity(this.openBtnEl, 'callout.tada')
+        }
       }
     }, 5000)
 
