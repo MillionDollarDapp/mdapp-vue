@@ -79,7 +79,7 @@ const web3Manager = {
       this._isReconnecting = true
 
       // Reset connectionAttempts only after a certain amount of connection stability.
-      if (!this._lastConnectionAttempt && Math.floor(Date.now() / 1000) - this._lastConnectionAttempt > 30) {
+      if (this._lastConnectionAttempt && Math.floor(Date.now() / 1000) - this._lastConnectionAttempt > 30) {
         this._connectionAttempts = 0
       }
 
@@ -92,6 +92,7 @@ const web3Manager = {
       store.dispatch('setConnectionState', 'reconnecting')
 
       console.info('reconnecting')
+      this._lastConnectionAttempt = Math.floor(Date.now() / 1000)
       this._customProvider = null
       window.web3Watcher.setProvider(this._getCustomProvider())
     }
@@ -137,19 +138,23 @@ const web3Manager = {
     store.dispatch('setConnectionState', 'connected')
     console.info(`connected to ${e.target.url}`)
 
-    // Data might have changed.
-    await this._getWeb3Data()
+    try {
+      // Data might have changed.
+      await this._getWeb3Data()
 
-    // Create contract instances.
-    await Promise.all([
-      store.dispatch('getSaleContractInstance'),
-      store.dispatch('getMdappContractInstance'),
-      store.dispatch('getTokenContractInstance')
-    ])
+      // Create contract instances.
+      await Promise.all([
+        store.dispatch('getSaleContractInstance'),
+        store.dispatch('getMdappContractInstance'),
+        store.dispatch('getTokenContractInstance')
+      ])
 
-    pollWeb3()
-    filters.init()
-    filters.handleReconnect()
+      pollWeb3()
+      filters.init()
+      filters.handleReconnect()
+    } catch (error) {
+      this.detectedDisconnect()
+    }
   },
 
   /**
@@ -188,6 +193,7 @@ const web3Manager = {
         store.dispatch('setWeb3Data', result)
       } catch (error) {
         console.error('getWeb3Data:', error)
+        this.detectedDisconnect()
       }
     }
   }

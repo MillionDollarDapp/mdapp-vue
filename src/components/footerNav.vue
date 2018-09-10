@@ -104,13 +104,13 @@ export default {
     },
 
     mdappTrigger () {
-      this.mdapp = this.$store.state.mdappContractInstance().options.address
+      this.mdapp = typeof this.$store.state.mdappContractInstance === 'function' ? this.$store.state.mdappContractInstance().options.address : null
     },
     saleTrigger () {
-      this.mdappSale = this.$store.state.saleContractInstance().options.address
+      this.mdappSale = typeof this.$store.state.saleContractInstance === 'function' ? this.$store.state.saleContractInstance().options.address : null
     },
     tokenTrigger () {
-      this.mdappToken = this.$store.state.tokenContractInstance().options.address
+      this.mdappToken = typeof this.$store.state.tokenContractInstance === 'function' ? this.$store.state.tokenContractInstance().options.address : null
     }
   }
 }
