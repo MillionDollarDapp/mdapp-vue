@@ -95,6 +95,7 @@ const web3Manager = {
       this._lastConnectionAttempt = Math.floor(Date.now() / 1000)
       this._customProvider = null
       window.web3Watcher.setProvider(this._getCustomProvider())
+      this._isReconnecting = false
     }
   },
 
@@ -177,24 +178,19 @@ const web3Manager = {
   async _getWeb3Data () {
     let web3 = this.getInstance()
     if (web3) {
-      try {
-        let result = {}
-        result.networkId = await web3.eth.net.getId()
-        result.block = await web3.eth.getBlockNumber()
-        result.coinbase = result.injectedWeb3 ? await web3.eth.getCoinbase() : null
+      let result = {}
+      result.networkId = await web3.eth.net.getId()
+      result.block = await web3.eth.getBlockNumber()
+      result.coinbase = result.injectedWeb3 ? await web3.eth.getCoinbase() : null
 
-        if (result.coinbase) {
-          // Convert to checksumAddress.
-          result.coinbase = web3.utils.toChecksumAddress(result.coinbase)
+      if (result.coinbase) {
+        // Convert to checksumAddress.
+        result.coinbase = web3.utils.toChecksumAddress(result.coinbase)
 
-          result.balance = web3.utils.toBN(await web3.eth.getBalance(result.coinbase))
-          result.balanceEth = Number(web3.utils.fromWei(result.balance, 'ether')).toFixed(3)
-        }
-        store.dispatch('setWeb3Data', result)
-      } catch (error) {
-        console.error('getWeb3Data:', error)
-        this.detectedDisconnect()
+        result.balance = web3.utils.toBN(await web3.eth.getBalance(result.coinbase))
+        result.balanceEth = Number(web3.utils.fromWei(result.balance, 'ether')).toFixed(3)
       }
+      store.dispatch('setWeb3Data', result)
     }
   }
 }

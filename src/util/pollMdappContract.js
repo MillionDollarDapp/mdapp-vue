@@ -1,4 +1,3 @@
-import Raven from 'raven-js'
 import {store} from '../store/'
 import web3Manager from './web3Manager'
 
@@ -12,12 +11,13 @@ const pollMdappContractFunction = async () => {
     }
 
     try {
-      let data = {}
-      data.presaleTokens = parseInt(await store.state.mdappContractInstance().methods.presaleBalanceOf(store.state.web3.coinbase).call())
-      store.dispatch('pollMdappContract', data)
+      if (store.state.web3.coinbase) {
+        let data = {}
+        data.presaleTokens = parseInt(await store.state.mdappContractInstance().methods.presaleBalanceOf(store.state.web3.coinbase).call())
+        store.dispatch('pollMdappContract', data)
+      }
     } catch (error) {
       console.error('pollMdapp:', error)
-      Raven.captureException(error)
     }
   }
 }

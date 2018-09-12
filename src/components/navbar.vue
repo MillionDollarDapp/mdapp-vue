@@ -105,8 +105,8 @@
                 <div class="mr-2">{{ referral }}</div>
                 <div class="mr-2"><file-text-icon id="copyReferralBtn" class="link" v-b-tooltip.hover title="Copy to clipboard" @click="copyToClipboard"/></div>
               </template>
-              <div v-if="!this.$store.state.soldOut || (this.$store.state.withdrawableBalance !== 0 && this.$store.state.withdrawableBalance.gt(0))">
-                <b-badge v-if="!this.$store.state.withdrawableBalance || this.$store.state.withdrawableBalance.eq(this.web3.utils.toBN(0))"
+              <div v-if="!this.$store.state.soldOut || (this.$store.state.withdrawableBalance !== 0 && this.$store.state.withdrawableBalance.gt(web3.utils.toBN(0)))">
+                <b-badge v-if="!this.$store.state.withdrawableBalance || this.$store.state.withdrawableBalance.eq(web3.utils.toBN(0))"
                          v-b-tooltip.hover title="Share your referral code to get 10% of all ETH spent at purchases of MDAPP using your code.">{{ 0 }} ETH</b-badge>
                 <b-badge v-else class="link" @click="withdrawReferralBalance" v-b-tooltip.hover title="Click to withdraw your referral balance">{{ this.$store.getters.withdrawableBalanceEthShort }} ETH</b-badge>
               </div>

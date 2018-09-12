@@ -1,4 +1,3 @@
-import Raven from 'raven-js'
 import web3Manager from './web3Manager'
 import {store} from '../store/'
 
@@ -14,7 +13,7 @@ const pollWeb3Function = async () => {
 
   if (web3) {
     let hadCoinbase = store.state.web3.coinbase
-    let hadEther = store.state.web3.balance && store.state.web3.balance.gt(0)
+    let hadEther = store.state.web3.balance && store.state.web3.balance.gt(web3.utils.toBN(0))
 
     try {
       let data = { coinbase: store.state.web3.isInjected ? await web3.eth.getCoinbase() : null }
@@ -51,9 +50,9 @@ const pollWeb3Function = async () => {
         }
 
         // Set helper progress based on balance.
-        if (!hadEther && data.balance.gt(0)) {
+        if (!hadEther && data.balance.gt(web3.utils.toBN(0))) {
           store.dispatch('setHelperProgress', ['ether', true])
-        } else if (hadEther && data.balance.lt(1)) {
+        } else if (hadEther && data.balance.lt(web3.utils.toBN(1))) {
           store.dispatch('setHelperProgress', ['ether', false])
         }
       } else {
@@ -65,7 +64,9 @@ const pollWeb3Function = async () => {
       store.dispatch('pollWeb3', data)
     } catch (error) {
       console.error('pollWeb3:', error)
-      Raven.captureException(error)
+      if (error.message.toLowerCase().indexOf('connect') !== -1) {
+        web3Manager.detectedDisconnect()
+      }
     }
   }
 }

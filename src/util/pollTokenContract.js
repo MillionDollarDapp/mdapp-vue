@@ -15,7 +15,7 @@ const pollTokenContractFunction = async () => {
   if (web3 && store.state.tokenContractInstance !== null && store.state.web3.coinbase) {
     try {
       let data = {}
-      let hadBalance = store.state.balance && store.state.balance.gt(0)
+      let hadBalance = store.state.balance && store.state.balance.gt(web3.utils.toBN(0))
 
       let conditionalPromises = {
         minting: false
@@ -45,9 +45,9 @@ const pollTokenContractFunction = async () => {
         data.mintingFinished = values[4]
       }
 
-      if (!hadBalance && data.balance.gt(0)) {
+      if (!hadBalance && data.balance.gt(web3.utils.toBN(0))) {
         store.dispatch('setHelperProgress', ['mdapp', true])
-      } else if (hadBalance && !data.balance.gt(0)) {
+      } else if (hadBalance && !data.balance.gt(web3.utils.toBN(0))) {
         store.dispatch('setHelperProgress', ['mdapp', false])
       }
 
