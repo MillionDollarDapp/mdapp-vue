@@ -126,7 +126,7 @@ export default {
         })
       } else if (process.env.NODE_ENV === 'production') {
         // Show wrong network modal.
-        let name = NETWORKS[this.$store.state.web3.networkId].name
+        let name = NETWORKS[process.env.DEFAULT_NETWORK].name
 
         this.$swal({
           type: 'warning',

@@ -1,5 +1,5 @@
 <template>
-  <b-row>
+  <b-row class="m-0">
     <b-col class="p-0">
       <b-jumbotron header-tag="div" fluid container-fluid>
         <template slot="header">
