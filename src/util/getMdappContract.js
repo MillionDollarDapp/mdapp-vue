@@ -39,7 +39,7 @@ const initMdappContract = async () => {
     }
   } catch (error) {
     console.error('initMdappContract:', error)
-    Raven.captureException(error)
+    setTimeout(() => { initMdappContract() }, 1000)
   }
 }
 

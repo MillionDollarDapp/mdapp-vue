@@ -41,7 +41,7 @@ const initSaleContract = async () => {
     }
   } catch (error) {
     console.error('initSaleContract:', error)
-    Raven.captureException(error)
+    setTimeout(() => { initSaleContract() }, 1000)
   }
 }
 
