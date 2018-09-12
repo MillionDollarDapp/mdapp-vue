@@ -13,6 +13,10 @@
         <a href="https://t.me/MillionDollarDapp" target="_blank" v-b-tooltip.hover title="Telegram">
           <img src="@/assets/telegram_circle_white.png" width="32px" height="32px">
         </a>
+
+        <a href="https://www.instagram.com/milliondollardapp/" target="_blank" v-b-tooltip.hover title="Instagram">
+          <img src="@/assets/instagram_white.png" width="32px" height="32px">
+        </a>
       </div>
 
       <div class="status d-flex">
