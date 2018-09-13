@@ -43,7 +43,8 @@ const filters = {
     try {
       if (store.state.web3.block === null ||
         store.state.mdappContractInstance === null ||
-        store.state.saleContractInstance === null) {
+        store.state.saleContractInstance === null ||
+        (store.state.web3.isInjected && !store.state.web3.coinbase)) {
         await new Promise(resolve => setTimeout(resolve, 100))
         await this.initUser()
         return
