@@ -1,4 +1,3 @@
-import Raven from 'raven-js'
 import contractArtifacts from '../../build/contracts/MDAPP'
 import {store} from '../store/'
 import web3Manager from './web3Manager'
