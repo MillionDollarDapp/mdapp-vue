@@ -18,24 +18,27 @@
           </b-row>
           <hr/>
           <!-- When user owns tokens... -->
-          <template v-if="this.$store.state.balance > 0">
-            <b-row align-h="between">
-              <b-col md="auto" v-if="!this.claimPossible || this.claimAllActive">Unlocked tokens <span class="font-weight-bold">required</span>:</b-col>
-              <b-col md="auto" v-else>Presale tokens <span class="font-weight-bold">required</span>:</b-col>
-              <b-col md="auto" class="text-right">{{ selectedArea.getTokenQty() }} MDAPP</b-col>
-            </b-row>
+          <template v-if="this.$store.state.balance && this.$store.state.balance.gt(this.web3.utils.toBN(0))">
+            <!--Show required and available tokens on top if the user can't / doesn't need to buy more-->
+            <template v-if="missingTokens === 0">
+              <b-row align-h="between">
+                <b-col md="auto" v-if="!this.claimPossible || this.claimAllActive">Unlocked tokens <span class="font-weight-bold">required</span>:</b-col>
+                <b-col md="auto" v-else>Presale tokens <span class="font-weight-bold">required</span>:</b-col>
+                <b-col md="auto" class="text-right">{{ selectedArea.getTokenQty() }} MDAPP</b-col>
+              </b-row>
 
-            <b-row align-h="between">
-              <template v-if="!this.claimPossible || this.claimAllActive">
-                <b-col md="auto">Unlocked tokens <span class="font-weight-bold">available</span>:</b-col>
-                <b-col md="auto" class="text-right">{{ this.$store.getters.unlockedTokens }} MDAPP</b-col>
-              </template>
-              <template v-else>
-                <b-col md="auto">Presale tokens <span class="font-weight-bold">available</span>:</b-col>
-                <b-col md="auto" class="text-right">{{ this.$store.state.presaleTokens }} MDAPP</b-col>
-              </template>
+              <b-row align-h="between">
+                <template v-if="!this.claimPossible || this.claimAllActive">
+                  <b-col md="auto">Unlocked tokens <span class="font-weight-bold">available</span>:</b-col>
+                  <b-col md="auto" class="text-right">{{ this.$store.getters.unlockedTokens }} MDAPP</b-col>
+                </template>
+                <template v-else>
+                  <b-col md="auto">Presale tokens <span class="font-weight-bold">available</span>:</b-col>
+                  <b-col md="auto" class="text-right">{{ this.$store.state.presaleTokens }} MDAPP</b-col>
+                </template>
+              </b-row>
+            </template>
 
-            </b-row>
             <!-- Case 1: no claim period active at all -->
             <template v-if="!claimPossible">
               <b-row class="my-3">
@@ -102,39 +105,57 @@
                 </b-col>
               </b-row>
             </template>
-            <b-row v-if="!this.userCanClaim && this.claimPossible" class="justify-content-center text-center">
-              <b-col v-if="this.claimAllActive"><b-alert variant="info" show class="mt-1 mb-0">You need <span class="font-weight-bold">{{ missingTokens }}</span> more MDAPP tokens.</b-alert></b-col>
-              <b-col v-else><b-alert variant="info" show class="mt-1 mb-0">Not enough presale tokens available.</b-alert></b-col>
-            </b-row>
+            <!--<b-row v-if="!this.userCanClaim && this.claimPossible" class="justify-content-center text-center">-->
+              <!--<b-col v-if="this.claimAllActive"><b-alert variant="info" show class="mt-1 mb-1">You need <span class="font-weight-bold">{{ missingTokens }}</span> more MDAPP tokens.</b-alert></b-col>-->
+              <!--<b-col v-else><b-alert variant="info" show class="mt-1 mb-1">Not enough presale tokens available.</b-alert></b-col>-->
+            <!--</b-row>-->
             <b-row v-if="this.userCanClaim" class="mt-3 font-italic">
               <b-col class="line-breakable notice">
                 If multiple people claim the same pixels at the same time, the one whose transaction gets processed earlier by the Ethereum network will get them.
                 If another one was faster, you get your MDAPP refunded.
               </b-col>
             </b-row>
-            <b-row>
+            <b-row v-if="missingTokens === 0">
               <b-col class="text-center"><b-button variant="success" :disabled="!this.userCanClaim" @click="claimBtnPressed">Claim pixels</b-button></b-col>
             </b-row>
           </template>
 
           <!-- Show a divider if the above and below template is visible -->
-          <hr v-if="!this.$store.state.soldOut && this.$store.state.balance > 0 && missingTokens > 0" class="divider"/>
+          <!--<hr v-if="!this.$store.state.soldOut && this.$store.state.balance > 0 && missingTokens > 0" class="divider"/>-->
 
           <!-- When tokens can be bought... -->
           <template v-if="!this.$store.state.soldOut && missingTokens > 0">
             <b-row>
-              <b-col v-if="selectedArea.getTokenQty() > this.$store.getters.unlockedTokens">
-                <p>Buy <span class="font-weight-bold">{{ missingTokens }} MDAPP</span> tokens to claim an area of this size.<br />1 MDAPP can claim 1 square (= 100 pixels).</p>
+              <b-col v-if="selectedArea.getTokenQty() > this.$store.getters.unlockedTokens" class="mt-2">
+                <p>Buy <span class="font-weight-bold">{{ missingTokens }} <template v-if="this.$store.getters.unlockedTokens">more </template>MDAPP</span> tokens to claim an area of this size.<br />1 MDAPP can claim 1 square (= 100 pixels).</p>
               </b-col>
             </b-row>
             <b-row align-h="between">
               <b-col md="auto">Pixels:</b-col><b-col md="auto" class="text-right">{{selectedArea.getPixels()}}</b-col>
             </b-row>
+            <!--Show available / required tokens-->
             <b-row align-h="between">
-              <b-col md="auto">Price per pixel:</b-col><b-col md="auto" class="text-right">$1 ({{ pixelPriceEth.toFixed(8) }} ETH)</b-col>
+              <b-col md="auto" v-if="!this.claimPossible || this.claimAllActive">Unlocked tokens <span class="font-weight-bold">required</span>:</b-col>
+              <b-col md="auto" v-else>Presale tokens <span class="font-weight-bold">required</span>:</b-col>
+              <b-col md="auto" class="text-right">{{ selectedArea.getTokenQty() }} MDAPP</b-col>
+            </b-row>
+
+            <b-row align-h="between">
+              <template v-if="!this.claimPossible || this.claimAllActive">
+                <b-col md="auto">Unlocked tokens <span class="font-weight-bold">available</span>:</b-col>
+                <b-col md="auto" class="text-right">{{ this.$store.getters.unlockedTokens }} MDAPP</b-col>
+              </template>
+              <template v-else>
+                <b-col md="auto">Presale tokens <span class="font-weight-bold">available</span>:</b-col>
+                <b-col md="auto" class="text-right">{{ this.$store.state.presaleTokens }} MDAPP</b-col>
+              </template>
+            </b-row>
+
+            <b-row align-h="between">
+              <b-col md="auto">Price per token:</b-col><b-col md="auto" class="text-right">$100 ({{ Number(pixelPriceEth * 100).toFixed(8) }} ETH)</b-col>
             </b-row>
             <b-row align-h="between">
-              <b-col md="auto">Total cost:</b-col><b-col md="auto" class="text-right">${{ selectedArea.getTokenQty() * 100 }} ({{ costEth.toFixed(8) }} ETH)</b-col>
+              <b-col md="auto">Total cost:</b-col><b-col md="auto" class="text-right">${{ missingTokens * 100 }} ({{ costEth.toFixed(8) }} ETH)</b-col>
             </b-row>
             <b-row>
               <b-col class="text-center"><b-button variant="success" :disabled="!buyPossible" @click="buyBtnPressed">Buy {{ missingTokens }} MDAPP Token(s)</b-button></b-col>
@@ -213,7 +234,7 @@ export default {
     },
     costEth () {
       // Total cost in ETH
-      return Number(this.web3.utils.fromWei(this.$store.getters.pixelPriceWei.mul(this.web3.utils.toBN(100 * this.selectedArea.getTokenQty())), 'ether'))
+      return Number(this.web3.utils.fromWei(this.$store.getters.pixelPriceWei.mul(this.web3.utils.toBN(100 * this.missingTokens)), 'ether'))
     },
 
     web3 () {
