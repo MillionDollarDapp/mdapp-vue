@@ -234,7 +234,7 @@ a {
   text-decoration: none !important;
   transition: color .3s;
 }
-a:hover {
+a:hover:not(.btn) {
   color: $blue !important;
 }
 </style>
