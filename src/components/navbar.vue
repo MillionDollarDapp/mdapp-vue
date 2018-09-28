@@ -1,20 +1,27 @@
 <template>
   <b-navbar type="dark" toggleable="md" variant="dark">
     <div class="d-flex m-0 p-0 w-100">
-      <b-navbar-brand href="#" class="flex-shrink-1 p-0"><img src="@/assets/logo.png" height="50px" style="margin-top: 4px;"/></b-navbar-brand>
+      <!--<b-navbar-brand href="#" class="flex-shrink-1 p-0"><img src="@/assets/logo06.png" height="50px" style="margin-top: 4px;"/></b-navbar-brand>-->
       <div class="d-flex flex-column flex-grow-1 w-100">
         <div class="d-flex flex-row justify-content-start" style="flex-wrap: nowrap">
+          <b-navbar-brand href="#" class="flex-shrink-1 p-0"><img src="@/assets/symbol-text.png" height="40px"/></b-navbar-brand>
+
           <b-collapse is-nav id="nav_collapse">
             <b-navbar-nav class="text-nowrap">
               <b-nav-item href="#">Home</b-nav-item>
               <b-nav-item href="#">The Story</b-nav-item>
               <b-nav-item href="#">FAQ</b-nav-item>
-              <b-nav-item href="#">Whitepaper</b-nav-item>
+              <b-nav-item href="#">White Paper</b-nav-item>
             </b-navbar-nav>
 
             <b-button id="quickBuyBtn" class="ml-2" variant="success" size="sm" @click="buyBtnPressed" v-b-tooltip.hover title="Buy MDAPP to claim your pixels"
               v-if="buyPossible && web3Data.coinbase">
               Buy Now!
+            </b-button>
+
+            <b-button id="createReferralBtn" class="ml-2" variant="success" size="sm" @click="createReferralClicked" v-b-tooltip.hover title="Create your referral code and earn real ETH!"
+              v-if="!buyPossible || !web3Data.coinbase">
+              Create referral code
             </b-button>
 
             <b-row align-h="end" class="highlight ml-auto">
@@ -94,8 +101,8 @@
           <b-navbar-toggle target="nav_collapse" class="ml-auto"></b-navbar-toggle>
         </div>
         <div class="d-flex justify-content-start text-white sub-nav">
-          <!--<div class="slogan text-white-50 ml-3">...be part of history!</div>-->
-          <div class="slogan text-white-50 pl-2">
+          <div class="slogan text-white-50 ml-5 mr-5">...be part of history!</div>
+          <div class="slogan text-white-50 pl-4 ml-1">
             1,000,000 pixels &#9675; $1 per pixel &#9675; 100 pixels per token
           </div>
           <div class="flex-grow-1 d-flex justify-content-end sub-nav-right text-white-50">
@@ -117,6 +124,7 @@
     </div>
 
     <modal-buy id="modalBuyNav" :selectedTokenQty="1" :pixelPriceEth="this.$store.getters.pixelPriceWei" :buyPossible="buyPossible" v-on:showTxLog="$refs.txLogDropdown.visible = true"/>
+    <modal-referral />
   </b-navbar>
 </template>
 
@@ -124,6 +132,7 @@
 import Raven from 'raven-js'
 import TxItem from '@/components/txItem'
 import ModalBuy from '@/components/modalBuy'
+import ModalReferral from '@/components/modalReferral'
 import utils from '../util/utils'
 import saleContract from '../util/interactions/saleContract'
 import {newTransaction} from '../util/transaction'
@@ -134,6 +143,7 @@ export default {
   name: 'navbar',
   components: {
     ModalBuy,
+    ModalReferral,
     TxItem,
 
     ActivityIcon,
@@ -186,6 +196,10 @@ export default {
   },
 
   methods: {
+    createReferralClicked () {
+      this.$root.$emit('bv::show::modal', 'modalReferral')
+    },
+
     buyBtnPressed () {
       this.$root.$emit('bv::show::modal', 'modalBuyNav')
     },
@@ -313,7 +327,7 @@ export default {
 <style lang="scss">
   @import "~bootstrap/scss/bootstrap.scss";
 
-  #quickBuyBtn {
+  #quickBuyBtn, #createReferralBtn {
     border-radius: 30px;
     font-size: 0.75rem;
   }
