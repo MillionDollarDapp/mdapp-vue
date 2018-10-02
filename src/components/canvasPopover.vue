@@ -157,8 +157,11 @@
             <b-row align-h="between">
               <b-col md="auto">Total cost:</b-col><b-col md="auto" class="text-right">${{ missingTokens * 100 }} ({{ costEth.toFixed(8) }} ETH)</b-col>
             </b-row>
+            <b-row class="mt-2" v-if="!$store.state.web3.coinbase">
+              <b-col md="auto">Install <a href="https://metamask.io" target="_blank">MetaMask</a> and unlock an account to proceed.</b-col>
+            </b-row>
             <b-row>
-              <b-col class="text-center"><b-button variant="success" :disabled="!buyPossible" @click="buyBtnPressed">Buy {{ missingTokens }} MDAPP Token(s)</b-button></b-col>
+              <b-col class="text-center"><b-button variant="success" :disabled="!buyPossible || !$store.state.web3.coinbase" @click="buyBtnPressed">Buy {{ missingTokens }} MDAPP Token(s)</b-button></b-col>
             </b-row>
           </template>
 
