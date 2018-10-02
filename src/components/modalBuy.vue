@@ -9,38 +9,15 @@
       <b-container fluid class="text-left">
         <b-row class="mb-3"><b-col>Please read the T&C carefully and confirm the checkboxes to continue.</b-col></b-row>
         <b-row class="mb-3">
-          <b-col class="scroll-box">
-            Final T&C coming soon.<br /><br />
-
-            <strong>Token Sale Metrics</strong>
-            <p>Symbol: MDAPP<br />
-            Decimals: 0<br />
-            Max. supply: 10,000 MDAPP<br />
-            Price per Token: $100*<br />
-            Hard Cap: $1,000,000<br />
-            Presale: TBA<br />
-            Sale: TBA<br />
-            Presale pixel claiming start: TBA<br />
-            Sale pixel claiming start: TBA</p>
-
-            <!--First come - first serve<br />-->
-            <!--Transaction fee<br />-->
-            <!--NSFW<br />-->
-            <!--Utility Token<br />-->
-            <!--Trading<br />-->
-            <!--No warranty<br />-->
-            <!--Cencorship resistent<br />-->
-            <!--Immutable<br />-->
-            <!--Availability<br />-->
-          </b-col>
+          <terms-and-conditions/>
         </b-row>
 
         <b-row class="mb-2">
           <b-col>
             <b-form-checkbox v-model="acceptedTC">
-              I confirm that I have read and understand the Terms and Conditions and the Whitepaper and that I
+              I confirm that I have read and understand the Terms and Conditions and the White Paper and that I
               expressly accept all terms, conditions, obligations, affirmations, representations and warranties described in
-              these documents and agree to be bound by them.**
+              these documents and agree to be bound by them.*
             </b-form-checkbox>
           </b-col>
         </b-row>
@@ -57,11 +34,7 @@
 
       <b-container fluid class="text-left footer mt-3">
         <b-row>
-          <b-col>* Price based on ETH exchange rate determined by COINBASE via smart contract oracle of ORACLIZE LIMITED. Additional
-            network transaction fees are necessary and are not inclusive.</b-col>
-        </b-row>
-        <b-row>
-          <b-col>** BY PURCHASING TOKENS, YOU ACKNOWLEDGE, AGREE AND CERTIFY THAT YOU ARE PURCHASING TOKENS DURING THE SALE
+          <b-col>* BY PURCHASING TOKENS, YOU ACKNOWLEDGE, AGREE AND CERTIFY THAT YOU ARE PURCHASING TOKENS DURING THE SALE
             PERIOD FOR YOUR OWN PERSONAL USE AND UTILITY, AND TO PARTICIPATE IN THE ECOSYSTEM AND NOT FOR INVESTMENT, OR
             FINANCIAL PURPOSES. YOU AGREE AND CERTIFY THAT TOKENS ARE NOT A SECURITY OR A CRYPTOCURRENCY AND ACKNOWLEDGE
             THAT TOKENS MAY HAVE NO VALUE AND MAY LOSE VALUE, IF ANY.</b-col>
@@ -115,6 +88,7 @@
 <script>
 import Raven from 'raven-js'
 import { Edit3Icon } from 'vue-feather-icons'
+import TermsAndConditions from '@/components/termsAndConditions'
 import saleContract from '../util/interactions/saleContract'
 import { newTransaction } from '../util/transaction'
 import utils from '../util/utils'
@@ -123,7 +97,8 @@ import web3Manager from '../util/web3Manager'
 export default {
   name: 'modalBuy',
   components: {
-    Edit3Icon
+    Edit3Icon,
+    TermsAndConditions
   },
 
   props: {
@@ -337,14 +312,6 @@ export default {
 <style scoped>
   .feather {
     color: #343a40;
-  }
-
-  .scroll-box {
-    background: #f4f4f4;
-    border: 2px solid rgba(0, 0, 0, 0.1);
-    height: 400px; /* maximum height of the box, feel free to change this! */
-    padding: 15px;
-    overflow-y: scroll;
   }
 
   .footer {
