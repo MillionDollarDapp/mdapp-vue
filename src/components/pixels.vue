@@ -582,7 +582,7 @@ export default {
           // Create new image
           let imageEl = new Image(ad.width, ad.height)
           imageEl.src = ad.image
-          imageEl.setAttribute('style', `top: ${ad.y + 1}px; left: ${ad.x + 1}px; width: ${ad.width}px; height: ${ad.height}px;`)
+          imageEl.setAttribute('style', `top: ${ad.y}px; left: ${ad.x}px; width: ${ad.width}px; height: ${ad.height}px;`)
           imageEl.setAttribute('data-ad-id', ad.id)
           imageEl.forceRef = true
 
@@ -674,7 +674,7 @@ export default {
         // Overlay if it's NSFW
         if (!ad.isCurrentUser && !ad.hasOwnProperty('nsfwEl') && (ad.nsfw || this.$store.state.forceNSFW.has(ad.id))) {
           let nsfwEl = document.createElement('div')
-          nsfwEl.setAttribute('style', `top: ${ad.y + 1}px; left: ${ad.x + 1}px; width: ${ad.width}px; height: ${ad.height}px;`)
+          nsfwEl.setAttribute('style', `top: ${ad.y}px; left: ${ad.x}px; width: ${ad.width}px; height: ${ad.height}px;`)
           nsfwEl.setAttribute('class', 'nsfw-overlay')
           nsfwEl.forceRef = true
           ad.nsfwEl = nsfwEl
@@ -687,7 +687,7 @@ export default {
 
           // Create an empty div-container
           let divEl = document.createElement('div')
-          divEl.setAttribute('style', `top: ${ad.y + 1}px; left: ${ad.x + 1}px; width: ${ad.width}px; height: ${ad.height}px;`)
+          divEl.setAttribute('style', `top: ${ad.y}px; left: ${ad.x}px; width: ${ad.width}px; height: ${ad.height}px;`)
           divEl.setAttribute('data-ad-id', ad.id)
           divEl.forceRef = true
 
