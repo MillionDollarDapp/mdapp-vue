@@ -111,18 +111,18 @@
 
     <p><span class="font-weight-bold">8. Force Majeure</span><br />
       The Author is not liable for failure to perform solely caused by:<br />
-      <ul class="mt-2">
-        <li>unavoidable casualty,</li>
-        <li>delays in delivery of materials,</li>
-        <li>embargoes,</li>
-        <li>government orders,</li>
-        <li>acts of civil or military authorities,</li>
-        <li>acts by common carriers,</li>
-        <li>emergency conditions (including weather conditions),</li>
-        <li>security issues arising from the technology used,</li>
-      </ul>
-      or any similar unforeseen event that renders performance commercially implausible.injured party.
     </p>
+    <ul>
+      <li>unavoidable casualty,</li>
+      <li>delays in delivery of materials,</li>
+      <li>embargoes,</li>
+      <li>government orders,</li>
+      <li>acts of civil or military authorities,</li>
+      <li>acts by common carriers,</li>
+      <li>emergency conditions (including weather conditions),</li>
+      <li>security issues arising from the technology used,</li>
+    </ul>
+    <p>or any similar unforeseen event that renders performance commercially implausible.injured party.</p>
 
     <p><span class="font-weight-bold">9. Disclaimer of Warranties</span><br />
       THE PURCHASER EXPRESSLY AGREES THAT THE PURCHASER IS PURCHASING MDAPP AT THE PURCHASER'S SOLE RISK AND THAT MDAPP

@@ -3,14 +3,16 @@
     <div class="navigation">
       <navbar :buyPossible="buyPossible" :showDropdownPing="showDropdownPing" v-on:highlight-claimed="blinkClaimed" v-on:toggleNSFW="toggleNSFW"/>
     </div>
-    <div class="helper">
+    <div class="helper" v-if="this.$route.meta.showHelper">
       <helper-list/>
     </div>
     <div id="content" class="flex-grow-1 flex-shrink-0 d-flex flex-column justify-content-center">
       <!--<div id="content" class="d-flex justify-content-center align-items-center">-->
-      <router-view :highlightClaimed="highlightClaimed" :showNSFW="showNSFW"
+      <router-view :class="{'invisible': this.$route.name != 'mdapp'}" name="content" :highlightClaimed="highlightClaimed" :showNSFW="showNSFW"
                    v-on:changeBuyPossible="changeBuyPossible"
                    v-on:showTxLog="showDropdownPing = !showDropdownPing"/>
+
+      <router-view id="route-overlay" name="overlay" class="pt-4 pb-4"/>
     </div>
     <footer-nav/>
 
@@ -176,6 +178,25 @@ html, body {
 
 .navigation {
   z-index: 10;
+}
+
+/*****************
+ * Route Overlay *
+ *****************/
+#content {
+  position: relative;
+}
+
+.invisible {
+  position: absolute;
+  display: none;
+}
+
+#route-overlay {
+  min-height: 100%;
+  width: 100%;
+  z-index: 5;
+  background-color: #FFF;
 }
 
 /*****************

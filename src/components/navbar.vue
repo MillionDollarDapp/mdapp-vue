@@ -8,9 +8,9 @@
 
           <b-collapse is-nav id="nav_collapse">
             <b-navbar-nav class="text-nowrap">
-              <b-nav-item href="#">Home</b-nav-item>
+              <b-nav-item to="/" exact>Home</b-nav-item>
               <b-nav-item href="#">The Story</b-nav-item>
-              <b-nav-item href="#">FAQ</b-nav-item>
+              <b-nav-item to="/faq">FAQ</b-nav-item>
               <b-nav-item href="#">White Paper</b-nav-item>
             </b-navbar-nav>
 
