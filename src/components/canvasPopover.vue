@@ -115,7 +115,7 @@
                 If another one was faster, you get your MDAPP refunded.
               </b-col>
             </b-row>
-            <b-row v-if="missingTokens === 0">
+            <b-row v-if="missingTokens < 1">
               <b-col class="text-center"><b-button variant="success" :disabled="!this.userCanClaim" @click="claimBtnPressed">Claim pixels</b-button></b-col>
             </b-row>
           </template>
