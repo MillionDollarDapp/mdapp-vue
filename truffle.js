@@ -1,5 +1,5 @@
 // Allows us to use ES6 in our migrations and tests.
-require('babel-register')
+// require('babel-register')
 
 const config = require('./deployConfig');
 var HDWalletProvider = require("truffle-hdwallet-provider");
