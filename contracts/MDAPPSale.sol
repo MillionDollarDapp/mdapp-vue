@@ -112,13 +112,6 @@ contract MDAPPSale is Ownable, PullPayment, usingOraclize {
 
   /*********************************************************
    *                                                       *
-   *                      Modifiers                        *
-   *                                                       *
-   *********************************************************/
-
-
-  /*********************************************************
-   *                                                       *
    *                  Initial deployment                   *
    *                                                       *
    *********************************************************/
@@ -243,9 +236,9 @@ contract MDAPPSale is Ownable, PullPayment, usingOraclize {
     require(_recruiter != _beneficiary && _recruiter != msg.sender, "Recruiter must not be purchaser or beneficiary.");
     assert(ethusd > 0);
 
-    // Each pixel costs $1 and 1 token represents 10x10 pixel. Therefore, multiply with 100.
-    // 10**18 * 10**2 = 10**20
-    uint256 rate = uint256(10 ** 20).div(ethusd);
+    // Each pixel costs $1 and 1 token represents 10x10 pixel => x100. ETHUSD comes in Cent => x100 once more
+    // 10**18 * 10**2 * 10**2 = 10**22
+    uint256 rate = uint256(10 ** 22).div(ethusd);
     // Calculate how much the tokens cost.
     // Overpayed purchases don't receive a return.
     uint256 cost = uint256(_tokenAmount).mul(rate);
@@ -254,7 +247,7 @@ contract MDAPPSale is Ownable, PullPayment, usingOraclize {
     if (cost > msg.value) {
       if (now - oracleLastUpdate <= 120) {
         assert(ethusdLast > 0);
-        rate = uint256(10 ** 20).div(ethusdLast);
+        rate = uint256(10 ** 22).div(ethusdLast);
         cost = uint256(_tokenAmount).mul(rate);
       }
     }
