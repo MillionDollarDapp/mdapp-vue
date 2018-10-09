@@ -112,8 +112,8 @@ contract MDAPP is Ownable, HasNoEther, CanReclaimToken {
    *********************************************************/
 
   modifier coordsValid(uint16 _x, uint16 _y, uint16 _width, uint16 _height) {
-    require(_x >= 0 && (_x + _width - 1) < 125, "Invalid coordinates.");
-    require(_y >= 0 && (_y + _height - 1) < 80, "Invalid coordinates.");
+    require((_x + _width - 1) < 125, "Invalid coordinates.");
+    require((_y + _height - 1) < 80, "Invalid coordinates.");
 
     _;
   }
@@ -131,6 +131,7 @@ contract MDAPP is Ownable, HasNoEther, CanReclaimToken {
   }
 
   modifier claimAllowed(uint16 _width, uint16 _height) {
+    require(_width > 0 &&_width <= 125 && _height > 0 && _height <= 80, "Invalid dimensions.");
     require(now >= presaleAdStart, "Claim period not yet started.");
 
     if (now < allAdStart) {
@@ -221,7 +222,7 @@ contract MDAPP is Ownable, HasNoEther, CanReclaimToken {
         uint16 y = _rect.y.add(j);
 
         if (grid[x][y]) {
-          revert("Already claimed");
+          revert("Already claimed.");
         }
 
         // Mark block as claimed.
