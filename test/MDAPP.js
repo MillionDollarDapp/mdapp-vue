@@ -23,23 +23,17 @@ contract('MDAPP', accounts => {
     let rate = calcRate(this.ethusd)
     this.pixelPriceWei = rate[0]
     this.tokenPriceWei = rate[1]
-
-    // Number(this.startTimeSale - web3.eth.getBlock('latest').timestamp)
-    // await increaseTime(countdown)
-    //
-    // // 6 regular MDAPP for user1
-    // await this.saleInstance.buyTokens(user1, 6, zeroAddress, {from: user1, value: this.tokenPriceWei.mul(6)})
-    //
-    // // 5 regular MDAPP for user2
-    // await this.saleInstance.buyTokens(user2, 5, zeroAddress, {from: user2, value: this.tokenPriceWei.mul(5)})
   })
 
-  it('accounts presale tokens', async () => {
+  it('allows only Sale contract to mint', async () => {
     // Jump into presale period
     let countdown = this.startTimePresale - latestTime() + 5
     await increaseTime(countdown)
 
+    await this.mdappInstance.mint(user1, 10, true, {from: owner}).should.be.rejectedWith(EVMThrow)
+
     // 10 presale MDAPP for user1
+    // Sale calls MDAPP
     await this.saleInstance.buyTokens(user1, 10, zeroAddress, {from: user1, value: this.tokenPriceWei.mul(10)})
     Number(await this.mdappInstance.presaleBalanceOf.call(user1, {from: user1})).should.equal(10)
   })

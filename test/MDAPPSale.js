@@ -188,8 +188,8 @@ contract('Sale', accounts => {
     await this.saleInstance.buyTokens(user2, available + 1, zeroAddress, {from: user2, value: total}).should.be.rejectedWith('Not enough tokens available.')
 
     // Buy exact amount
-    await this.saleInstance.buyTokens(user2, available, zeroAddress, {from: user2, value: total});
-    (await this.saleInstance.supply.call()).should.be.bignumber.equal(10000)
+    await this.saleInstance.buyTokens(user2, available, zeroAddress, {from: user2, value: this.tokenPriceWei.mul(available)});
+    Number(await this.saleInstance.supply.call()).should.equal(10000)
   })
 
   it('solds out', async () => {
