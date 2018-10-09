@@ -27,38 +27,6 @@ module.exports.increaseTime = function increaseTime(duration) {
   })
 }
 
-module.exports.makeSnapshot = function makeSnapshot() {
-  return new Promise((resolve, reject) => {
-    web3.currentProvider.sendAsync(
-      {
-        jsonrpc: "2.0",
-        method: "evm_snapshot",
-        params: [],
-        id: Date.now()
-      },
-      err1 => {
-        if (err1) reject(err1)
-      }
-    )
-  })
-}
-
-module.exports.revert = function revert() {
-  return new Promise((resolve, reject) => {
-    web3.currentProvider.sendAsync(
-      {
-        jsonrpc: "2.0",
-        method: "evm_revert",
-        params: [],
-        id: Date.now()
-      },
-      err1 => {
-        if (err1) reject(err1)
-      }
-    )
-  })
-}
-
 module.exports.sleep = function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -66,6 +34,7 @@ module.exports.sleep = function sleep(ms) {
 const BigNumber = web3.BigNumber
 const should = require('chai')
   .use(require('chai-as-promised'))
+  .use(require('chai-string'))
   .use(require('chai-bignumber')(BigNumber))
   .should()
 

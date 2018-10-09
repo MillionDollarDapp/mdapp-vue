@@ -1,7 +1,6 @@
 const { calcRate, duration, EVMThrow, increaseTime, latestTime, should, sleep } = require('./utils')
 
 const MDAPPSale = artifacts.require('MDAPPSale')
-const MDAPP = artifacts.require('MDAPP')
 const MDAPPToken = artifacts.require('MDAPPToken')
 
 contract('Sale', accounts => {
@@ -9,7 +8,6 @@ contract('Sale', accounts => {
   const zeroAddress = '0x0000000000000000000000000000000000000000'
 
   before(async () => {
-    this.mdappInstance = await MDAPP.deployed()
     this.tokenInstance = await MDAPPToken.deployed()
     this.saleInstance = await MDAPPSale.deployed()
 
