@@ -11,7 +11,7 @@
               <b-nav-item to="/" exact>Home</b-nav-item>
               <b-nav-item href="#">The Story</b-nav-item>
               <b-nav-item to="/faq">FAQ</b-nav-item>
-              <b-nav-item href="#">White Paper</b-nav-item>
+              <b-nav-item href="https://static.milliondollardapp.com/resources/MillionDollarDAPP_White-Paper_2018-10-10.pdf" target="_blank">White Paper</b-nav-item>
             </b-navbar-nav>
 
             <b-button id="quickBuyBtn" class="ml-2" variant="success" size="sm" @click="buyBtnPressed" v-b-tooltip.hover title="Buy MDAPP to claim your pixels"
