@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import Mdapp from '@/components/mdapp'
 import FAQ from '@/components/faq'
 import Legal from '@/components/legal'
+import About from '@/components/about'
 
 Vue.use(Router)
 
@@ -36,6 +37,17 @@ export default new Router({
       components: {
         content: Mdapp,
         overlay: Legal
+      },
+      meta: {
+        showHelper: false
+      }
+    },
+    {
+      path: '/about',
+      name: 'about',
+      components: {
+        content: Mdapp,
+        overlay: About
       },
       meta: {
         showHelper: false

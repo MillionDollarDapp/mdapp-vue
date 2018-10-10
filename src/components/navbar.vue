@@ -4,12 +4,11 @@
       <!--<b-navbar-brand href="#" class="flex-shrink-1 p-0"><img src="@/assets/logo06.png" height="50px" style="margin-top: 4px;"/></b-navbar-brand>-->
       <div class="d-flex flex-column flex-grow-1 w-100">
         <div class="d-flex flex-row justify-content-start" style="flex-wrap: nowrap">
-          <b-navbar-brand href="#" class="flex-shrink-1 p-0"><img src="@/assets/symbol-text.png" height="40px"/></b-navbar-brand>
+          <b-navbar-brand href="#" class="flex-shrink-1 p-0" to="/" exact><img src="@/assets/symbol-text.png" height="40px"/></b-navbar-brand>
 
           <b-collapse is-nav id="nav_collapse">
             <b-navbar-nav class="text-nowrap">
-              <b-nav-item to="/" exact>Home</b-nav-item>
-              <b-nav-item href="#">The Story</b-nav-item>
+              <b-nav-item to="/about">About</b-nav-item>
               <b-nav-item to="/faq">FAQ</b-nav-item>
               <b-nav-item href="https://static.milliondollardapp.com/resources/MillionDollarDAPP_White-Paper_2018-10-10.pdf" target="_blank">White Paper</b-nav-item>
             </b-navbar-nav>
