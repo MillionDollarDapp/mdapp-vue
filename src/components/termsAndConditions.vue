@@ -96,17 +96,17 @@
     </p>
 
     <p><span class="font-weight-bold">6. Timing of MDAPP Token Sale</span><br />
-      The MDAPP pre-sale begins at the first Ethereum block mined after October 10th, 2018 00:00pm UTC and ends at the
-      last Ethereum block mined before October 17th, 2018 00:00pm UTC.<br />
-      The MDAPP regular sale begins at the first Ethereum block mined after October 17th, 2018 00:00pm UTC and ends not
+      The MDAPP pre-sale begins at the first Ethereum block mined after October 11th, 2018 00:00am UTC and ends at the
+      last Ethereum block mined before October 17th, 2018 00:00am UTC.<br />
+      The MDAPP regular sale begins at the first Ethereum block mined after October 18th, 2018 00:00am UTC and ends not
       before and not after 10,000 MDAPP have been distributed.
     </p>
 
     <p><span class="font-weight-bold">7. Difference between Pre-Sale and Regular Sale</span><br />
       MDAPP tokens purchased during the pre-sale period can be used to claim 10x10 pixel squares starting at the first
-      Ethereum block mined after October 17th, 2018 00:00pm UTC.<br />
+      Ethereum block mined after October 18th, 2018 00:00am UTC.<br />
       MDAPP tokens purchased during the regular sale can be used to claim 10x10 pixel squares starting at the first
-      Ethereum block mined after October 24th, 2018 00:00pm UTC.
+      Ethereum block mined after October 25th, 2018 00:00am UTC.
     </p>
 
     <p><span class="font-weight-bold">8. Force Majeure</span><br />
