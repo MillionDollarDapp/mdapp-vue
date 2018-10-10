@@ -20,7 +20,7 @@
       <div class="text-left">
         <h3 class="mb-3">Welcome!</h3>
         <p>
-          The <span class="font-weight-bold">MillionDollar DAPP</span> is a homage to the <a href="http://www.milliondollarhomepage.com" target="_blank">www.milliondollarhomepage.com</a>
+          The <span class="font-weight-bold">MillionDollarDAPP</span> is a homage to the <a href="http://www.milliondollarhomepage.com" target="_blank">Million Dollar Homepage</a>
           from 2005. It maintains <span class="font-weight-bold">1,000,000 pixels</span> which are sold for <span class="font-weight-bold">$1 each</span>.<br />
           In contrast to the original, the MillionDollarDapp utilizes latest Web 3.0 technologies to operate in a complete decentralized manner.
         </p>
@@ -30,32 +30,17 @@
           Images are recognized by their "fingerprint" on IPFS (Interplanetary Filesystem) and served as long as anyone in the universe has interest in it.
         </p>
         <p>
-          That allows us to look at the site for any given time in the past*. Nobody is able to change records once they are written.
+          That allows us to look at the site for any given time in the past. Nobody is able to change records once they are written.
           Everybody can mirror the site and automatically sees the same contents. Fascinating, huh?
         </p>
         <p>
           To be allowed to place an ad, one needs so called <span class="font-weight-bold">MDAPP</span> (ERC20 compliant) tokens which are locked as long as you occupy space.
           Each token represents 10x10 pixels. At the same time, these are the minimum dimensions of your add. The tokens are transferable once all 10,000 tokens have been sold.
         </p>
-        <p>To interact, you need to:</p>
-        <ol>
-          <li>Use a PC or Mac and install <a href="https://www.metamask.io" target="_blank">MetaMask</a> extension</li>
-          <li>Switch to "Rinkeby" network (= testnet)</li>
-          <li>Load your account with testnet-ETH at the <a href="https://faucet.rinkeby.io/" target="_blank">Rinkeby Faucet</a></li>
-          <li>Buy MDAPP tokens</li>
-          <li>Claim your pixels (which locks the appropriate amount of MDAPP)</li>
-          <li>Click on your pixels to place an ad</li>
-        </ol>
-        <p class="text-center mt-3">
-          <span class="font-weight-bold">Important Note: This site is currently under heavy development and operates on the Rinkeby TESTNET. This means the state can change and be reset.<br />
-                Do not expect the site to do what it should!</span>
+        <p class="greet text-left">
+          Build in Karlsruhe, Germany
         </p>
-        <p class="greet text-right">
-          Build with passion in Karlsruhe, Germany
-        </p>
-        <div class="footnotes">
-          *not yet implementended in the frontend
-        </div>
+        <div class="text-right"><b-button class="closeWelcomeBtn" variant="primary">OK</b-button></div>
       </div>
     </div>
   </div>
@@ -124,7 +109,13 @@ export default {
           customClass: 'welcome-modal',
           html: content,
           heightAuto: false,
-          showConfirmButton: false
+          showConfirmButton: false,
+          onOpen: () => {
+            let btn = document.querySelector('.welcome-modal .closeWelcomeBtn')
+            btn.addEventListener('click', () => {
+              this.$swal.close()
+            })
+          }
         })
       } else if (process.env.NODE_ENV === 'production') {
         // Show wrong network modal.
@@ -142,6 +133,10 @@ export default {
           allowEnterKey: false
         })
       }
+    },
+
+    hideWelcome () {
+      console.log('closing....')
     },
 
     blinkClaimed () {
@@ -174,6 +169,7 @@ html, body {
   text-align: center;
   color: #2c3e50;
   min-height: 100% !important;
+  min-width: 1251px;
 }
 
 .navigation {
@@ -210,9 +206,11 @@ html, body {
   padding: 0 15px;
 
   display: flex;
-  justify-content: center;
   flex-direction: column;
   text-align: center;
+}
+.welcome-modal .swal2-header .swal2-icon {
+  margin-top: 0;
 }
 
 .welcome-modal .swal2-content {
