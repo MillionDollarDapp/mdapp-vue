@@ -19,7 +19,7 @@
             </b-button>
 
             <b-button id="createReferralBtn" class="ml-2" variant="success" size="sm" @click="createReferralClicked" v-b-tooltip.hover title="Create your referral code and earn real ETH!"
-              v-if="!buyPossible || !web3Data.coinbase">
+              v-if="!web3Data.coinbase">
               Create referral code
             </b-button>
 
