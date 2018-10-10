@@ -1,53 +1,59 @@
 <template>
   <footer class="footer bg-dark text-white-50 text-left">
-    <div class="d-flex m-0 p-4 h-100 w-100">
-      <div class="follow flex-grow-1 d-flex align-items-center w-100 h-100">
-        <a href="https://github.com/MillionDollarDapp" target="_blank" v-b-tooltip.hover title="Github">
-          <img src="@/assets/GitHub-Mark-Light-32px.png" width="32px" height="32px">
-        </a>
-
-        <a href="https://twitter.com/MillionUSD_DAPP" target="_blank" v-b-tooltip.hover title="Twitter">
-          <img src="@/assets/Twitter_Social_Icon_Circle_White.png" width="32px" height="32px">
-        </a>
-
-        <a href="https://t.me/MillionDollarDapp" target="_blank" v-b-tooltip.hover title="Telegram">
-          <img src="@/assets/telegram_circle_white.png" width="32px" height="32px">
-        </a>
-
-        <a href="https://www.instagram.com/milliondollardapp/" target="_blank" v-b-tooltip.hover title="Instagram">
-          <img src="@/assets/instagram_white.png" width="32px" height="32px">
-        </a>
-      </div>
-
-      <div class="status d-flex">
-        <div class="network d-flex flex-column">
+    <div class="footer-inner d-flex m-0 p-4">
+      <div class="follow flex-grow-1">
+        <div class="d-flex flex-column justify-content-between h-100">
           <div class="d-flex">
-            <div class="label">Network:</div>
-            <div class="value">{{ network }}</div>
+            <a href="https://github.com/MillionDollarDapp" target="_blank" v-b-tooltip.hover title="Github">
+              <img src="@/assets/GitHub-Mark-Light-32px.png" width="32px" height="32px">
+            </a>
+
+            <a href="https://twitter.com/MillionUSD_DAPP" target="_blank" v-b-tooltip.hover title="Twitter">
+              <img src="@/assets/Twitter_Social_Icon_Circle_White.png" width="32px" height="32px">
+            </a>
+
+            <a href="https://t.me/MillionDollarDapp" target="_blank" v-b-tooltip.hover title="Telegram">
+              <img src="@/assets/telegram_circle_white.png" width="32px" height="32px">
+            </a>
+
+            <a href="https://www.instagram.com/milliondollardapp/" target="_blank" v-b-tooltip.hover title="Instagram">
+              <img src="@/assets/instagram_white.png" width="32px" height="32px">
+            </a>
           </div>
-          <div class="d-flex" v-if="blockexplorer && this.$store.state.web3.networkId">
-            <div class="label">Smart Contracts:</div>
-            <div class="value">
-              <div><a :href="`${blockexplorer}/address/${mdappToken}`" target="_blank">MDAPPToken  <external-link-icon/></a></div>
-              <div><a :href="`${blockexplorer}/address/${mdapp}`" target="_blank">MDAPP  <external-link-icon/></a></div>
-              <div><a :href="`${blockexplorer}/address/${mdappSale}`" target="_blank">MDAPPSale  <external-link-icon/></a></div>
+          <div class="pt-3"><router-link to="/legal">Legal notice</router-link></div>
+        </div>
+      </div>
+      <div class="status">
+        <div class="d-flex">
+          <div class="network d-flex flex-column">
+            <div class="d-flex">
+              <div class="label">Network:</div>
+              <div class="value">{{ network }}</div>
+            </div>
+            <div class="d-flex" v-if="blockexplorer && this.$store.state.web3.networkId">
+              <div class="label">Smart Contracts:</div>
+              <div class="value">
+                <div><a :href="`${blockexplorer}/address/${mdappToken}`" target="_blank">MDAPPToken  <external-link-icon/></a></div>
+                <div><a :href="`${blockexplorer}/address/${mdapp}`" target="_blank">MDAPP  <external-link-icon/></a></div>
+                <div><a :href="`${blockexplorer}/address/${mdappSale}`" target="_blank">MDAPPSale  <external-link-icon/></a></div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="web3 d-flex flex-column">
-          <div class="d-flex">
-            <div class="label">Web3 version:</div>
-            <div class="value">{{ version }}</div>
-          </div>
-          <div class="d-flex">
-            <div class="label">Endpoint:</div>
-            <div class="value">{{ endpoint }}</div>
-          </div>
-          <!--Too unreliable information from web3:-->
-          <!--<div class="d-flex">-->
+          <div class="web3 d-flex flex-column">
+            <div class="d-flex">
+              <div class="label">Web3 version:</div>
+              <div class="value">{{ version }}</div>
+            </div>
+            <div class="d-flex">
+              <div class="label">Endpoint:</div>
+              <div class="value">{{ endpoint }}</div>
+            </div>
+            <!--Too unreliable information from web3:-->
+            <!--<div class="d-flex">-->
             <!--<div class="label">Status:</div>-->
             <!--<div class="value">{{ this.$store.state.web3.connectionState }}</div>-->
-          <!--</div>-->
+            <!--</div>-->
+          </div>
         </div>
       </div>
     </div>
@@ -125,8 +131,8 @@ export default {
   margin-top: 5px;
   font-size: 0.8rem;
 }
-.follow {
-  height: 100%;
+.footer-inner > div {
+  flex-basis: 0;
 }
 .follow a {
   margin-right: 20px;
