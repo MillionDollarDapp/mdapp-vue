@@ -24,7 +24,7 @@ module.exports = {
         return new HDWalletProvider(config.rinkeby.mnemonic, config.rinkeby.endpoint)
       },
       gas: 6900000,
-      gasPrice: 7000000000,
+      gasPrice: 4000000000,
       network_id: 4
     }
   }
