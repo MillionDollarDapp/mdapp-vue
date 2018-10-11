@@ -119,18 +119,14 @@ export default {
         })
       } else if (process.env.NODE_ENV === 'production') {
         // Show wrong network modal.
-        let name = NETWORKS[process.env.DEFAULT_NETWORK].name
+        let name = NETWORKS[this.$store.state.web3.networkId].name
 
         this.$swal({
           type: 'warning',
-          title: 'Beta-Test',
-          html: `The <span class="font-weight-bold">MillionDollarDAPP</span> is currently in beta and only available
-                on the <span class="font-weight-bold">${name}</span> network. Please switch the network at MetaMask.`,
+          title: 'Test Network',
+          html: `You're connected to the <span class="font-weight-bold">${name}</span> network. Please switch to Mainnet for the 'real' version.`,
           heightAuto: false,
-          showConfirmButton: false,
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          allowEnterKey: false
+          showConfirmButton: true
         })
       }
     },

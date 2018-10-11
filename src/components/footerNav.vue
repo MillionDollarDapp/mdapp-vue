@@ -25,9 +25,8 @@
       </div>
       <div class="partners">
         <div class="d-flex">
-          <div class="pl-3 pr-3" style="white-space: nowrap">Featured by:</div>
-          <div class="pl-3 pr-3"><a class="d-inline-block" href="https://icoholder.com" target="_blank" v-b-tooltip.hover title="Icoholder">
-            <img src="@/assets/icoholder.svg" height="50px" alt="Icoholder - Ultimate Rated ICOs List"/>
+          <div class="pl-3 pr-3"><a class="d-inline-block" href="https://icoholder.com/en/milliondollardapp-26440" target="_blank" v-b-tooltip.hover title="Icoholder">
+            <img src="https://icoholder.com/en/small-black-listed/26440.widget.svg" height="50px" alt="Icoholder - Ultimate Rated ICOs List"/>
           </a></div>
           <div class="pl-3 pr-3"><a class="d-inline-block" href="https://www.trackico.io/" target="_blank" v-b-tooltip.hover title="TrackICO">
               <img border="0" src="https://www.trackico.io/static/img/partner_logo_white.png" alt="TrackICO - provider of information about the best ICOs" height="50px">
