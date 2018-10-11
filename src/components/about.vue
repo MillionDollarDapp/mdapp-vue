@@ -23,7 +23,7 @@
       possibility to place any ad you like. It's technical impossible that anyone in the world hinders you to do that!
       Every single interaction (buy token, claim pixels, edit content, release pixels) is stored on the Ethereum
       Blockchain for eternity (yes, really! As long as the Ethereum network is operating) and can be replayed. When time
-      goes on, we'll see what ads where place by whom in the past and are getting something like a
+      goes on, we'll see what ads were placed by whom in the past and we are getting something like a
       <span class="font-weight-bold">history book</span> automatically.<br />
       This works because all rules regarding this application are written in so called <span class="font-weight-bold">
       "Smart Contracts"</span> (see the links at the bottom right to read their code).
