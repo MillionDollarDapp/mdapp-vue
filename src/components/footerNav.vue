@@ -1,7 +1,7 @@
 <template>
   <footer class="footer bg-dark text-white-50 text-left">
-    <div class="footer-inner d-flex m-0 p-4">
-      <div class="follow flex-grow-1">
+    <div class="footer-inner d-flex m-0 p-4 justify-content-between">
+      <div class="follow">
         <div class="d-flex flex-column justify-content-between h-100">
           <div class="d-flex">
             <a href="https://github.com/MillionDollarDapp" target="_blank" v-b-tooltip.hover title="Github">
@@ -21,6 +21,18 @@
             </a>
           </div>
           <div class="pt-3"><router-link to="/legal">Legal notice</router-link></div>
+        </div>
+      </div>
+      <div class="partners">
+        <div class="d-flex">
+          <div class="pl-3 pr-3" style="white-space: nowrap">Featured by:</div>
+          <div class="pl-3 pr-3"><a class="d-inline-block" href="https://icoholder.com" target="_blank" v-b-tooltip.hover title="Icoholder">
+            <img src="@/assets/icoholder.svg" height="50px" alt="Icoholder - Ultimate Rated ICOs List"/>
+          </a></div>
+          <div class="pl-3 pr-3"><a class="d-inline-block" href="https://www.trackico.io/" target="_blank" v-b-tooltip.hover title="TrackICO">
+              <img border="0" src="https://www.trackico.io/static/img/partner_logo_white.png" alt="TrackICO - provider of information about the best ICOs" height="50px">
+            </a>
+          </div>
         </div>
       </div>
       <div class="status">
