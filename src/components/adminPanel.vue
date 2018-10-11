@@ -193,7 +193,7 @@ export default {
   methods: {
     async grantBounty () {
       // Just do a weak validation for admin
-      if (this.bountyBeneficiary && this.web3.isAddress(this.bountyBeneficiary) &&
+      if (this.bountyBeneficiary && this.web3.utils.isAddress(this.bountyBeneficiary) &&
         this.bountyTokens > 0 && this.bountyReason) {
         try {
           let [error, tx] = await saleContract.grantBounty(this.bountyBeneficiary, this.bountyTokens, this.bountyReason)
