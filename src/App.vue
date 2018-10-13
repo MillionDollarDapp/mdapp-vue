@@ -170,6 +170,8 @@ html, body {
   color: #2c3e50;
   min-height: 100% !important;
   min-width: 1251px;
+  position: relative;
+  overflow: hidden;
 }
 
 .navigation {
