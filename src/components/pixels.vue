@@ -913,8 +913,12 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @import "~bootstrap/scss/bootstrap.scss";
 
+  #canvasWrapper {
+    background-color: aliceblue;
+  }
 </style>
 
 <style>

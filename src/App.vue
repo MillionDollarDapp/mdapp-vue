@@ -16,6 +16,8 @@
     </div>
     <footer-nav/>
 
+    <particles-js/>
+
     <div id="welcome-modal-content" style="display: none">
       <div class="text-left">
         <h3 class="mb-3">Welcome!</h3>
@@ -49,6 +51,7 @@
 <script>
 import web3manager from './util/web3Manager'
 import HelperList from '@/components/helperList'
+import ParticlesJs from '@/components/particlesJs'
 import Navbar from '@/components/navbar'
 import FooterNav from '@/components/footerNav'
 import { NETWORKS } from './util/constants/networks'
@@ -61,6 +64,7 @@ export default {
   components: {
     HelperList,
     Navbar,
+    ParticlesJs,
     FooterNav
   },
 
