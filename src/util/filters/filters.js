@@ -21,7 +21,7 @@ const filters = {
     store.dispatch('setInitBlock', store.state.web3.block + 1)
 
     this.initUser()
-    this.initOtherAds()
+    this.initAll()
 
     this._inited = true
   },
@@ -82,12 +82,12 @@ const filters = {
     }
   },
 
-  async initOtherAds () {
+  async initAll () {
     try {
       if (store.state.web3.block === null ||
         store.state.mdappContractInstance === null) {
         await new Promise(resolve => setTimeout(resolve, 100))
-        await this.initOtherAds()
+        await this.initAll()
         return
       }
 
@@ -96,7 +96,8 @@ const filters = {
       let adIds = await store.state.mdappContractInstance().methods.getAdIds().call()
 
       let values = await Promise.all([
-        adFilter.getAllAds(adIds)
+        adFilter.getAllAds(adIds),
+        saleFilter.getAllBounties()
       ])
 
       // Store all ads
@@ -107,8 +108,9 @@ const filters = {
 
       // Start watching.
       adFilter.watchAllAds()
+      saleFilter.watchAll()
     } catch (error) {
-      console.error('initOtherAds:', error)
+      console.error('initAll:', error)
       Raven.captureException(error)
     }
   },

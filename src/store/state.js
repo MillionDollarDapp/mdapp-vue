@@ -53,6 +53,7 @@ let state = {
   ethusd: 0,
   soldOut: false,
   supply: 0,
+  bounties: 0,
   withdrawableBalance: null, // of the current user
   contractFunds: null, // withdrawable by wallet
   oracleActive: false,
@@ -88,6 +89,7 @@ let state = {
   nextBlockAllEdit: process.env.DAPP_GENESIS,
   nextBlockAllRelease: process.env.DAPP_GENESIS,
   nextBlockAllNSFW: process.env.DAPP_GENESIS,
+  nextBlockAllBounties: process.env.DAPP_GENESIS,
 
   // User transactions
   transactions: new Map(),

@@ -3,8 +3,12 @@
     <!--Show admin panel for contract owner and withdrawal account-->
     <div v-if="this.owner !== null && this.wallet !== null && (this.web3.coinbase === this.owner || this.web3.coinbase === this.wallet)"><admin-panel/></div>
 
-    <div v-if="showPresale"><sale-countdown title="Presale" v-bind:start="startTimePresale" v-bind:end="endTimePresale" v-on:is-finished="hidePresale" v-on:has-started="preSaleActive = true"/></div>
-    <div v-if="showSale"><sale-countdown title="Sale" v-bind:start="startTimeSale" v-bind:end="0" v-on:has-started="saleStarted"/></div>
+    <div class="info-bar d-flex mb-5">
+      <sale-stats/>
+      <sale-countdown v-if="showPresale" title="Presale" :start="startTimePresale" :end="endTimePresale" :claim="$store.state.adStartPresale" v-on:is-finished="hidePresale" v-on:has-started="preSaleActive = true"/>
+      <sale-countdown v-if="showSale" title="Sale" :start="startTimeSale" :end="0" :claim="$store.state.adStartAll" v-on:has-started="saleStarted"/>
+      <token-info/>
+    </div>
 
     <div :class="showNSFW ? 'show-nsfw' : 'hide-nsfw'">
       <pixels :buyPossible="buyPossible" :highlightClaimed="highlightClaimed" v-on:showTxLog="$emit('showTxLog')"/>
@@ -17,13 +21,17 @@ import { mapState } from 'vuex'
 import Pixels from '@/components/pixels'
 import SaleCountdown from '@/components/saleCountdown'
 import AdminPanel from '@/components/adminPanel'
+import SaleStats from '@/components/saleStats'
+import TokenInfo from '@/components/tokenInfo'
 
 export default {
   name: 'mdapp',
   components: {
     AdminPanel,
     Pixels,
-    SaleCountdown
+    SaleCountdown,
+    SaleStats,
+    TokenInfo
   },
 
   props: {
@@ -40,9 +48,7 @@ export default {
       startTimeSale: 0,
       saleEnded: false,
       preSaleActive: false,
-      saleActive: false,
-      claimStartPresale: 0,
-      claimStartAll: 0
+      saleActive: false
     }
   },
 
@@ -114,5 +120,14 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss">
+  @import "~bootstrap/scss/bootstrap.scss";
+
+  .info-bar {
+    background-color: rgba(52,58,64,0.5);
+    color: aliceblue;
+  }
+  .info-bar > div {
+    flex: 1;
+  }
 </style>

@@ -26,7 +26,7 @@ const saleFilter = {
 
     // If admin then show all bounties otherwise only own.
     let bountyOptions = {
-      fromBlock: process.env.START_BLOCK,
+      fromBlock: process.env.DAPP_GENESIS,
       toBlock: store.state.web3.block
     }
     if (store.state.web3.coinbase !== store.state.owner) {
@@ -101,6 +101,53 @@ const saleFilter = {
       })
       .on('error', error => {
         console.error('Watch user recruitments:', error)
+        if (error.message.toLowerCase().indexOf('connect') !== -1) {
+          web3Manager.detectedDisconnect()
+        }
+      })
+  },
+
+  async getAllBounties () {
+    try {
+      let bounties = await store.state.saleContractInstance().getPastEvents('BountyGranted', {
+        fromBlock: process.env.DAPP_GENESIS,
+        toBlock: store.state.web3.block
+      })
+
+      for (let key in bounties) {
+        store.dispatch('addBounty', Number(bounties[key].returnValues.tokens))
+      }
+    } catch (error) {
+      console.log('getAllBounties:', error)
+    }
+  },
+
+  _bountyFilter: null,
+
+  stopWatchAll () {
+    if (this._bountyFilter) {
+      this._bountyFilter.unsubscribe()
+    }
+  },
+  watchAll () {
+    this.stopWatchAll()
+
+    this._bountyFilter = store.state.saleContractInstanceWatcher().events.BountyGranted({
+      fromBlock: store.state.nextBlockAllBounties,
+      toBlock: 'latest'
+    })
+      .on('data', event => {
+        store.dispatch('addBounty', Number(event.returnValues.tokens))
+        store.dispatch('setNextFilterBlock', { filter: 'AllBounties', block: event.blockNumber + 1 })
+      })
+      .on('changed', event => {
+        Raven.captureMessage('A bounty event has been removed from blockchain', {
+          level: 'warning',
+          extra: { event: event }
+        })
+      })
+      .on('error', error => {
+        console.error('Watch all bounties:', error)
         if (error.message.toLowerCase().indexOf('connect') !== -1) {
           web3Manager.detectedDisconnect()
         }

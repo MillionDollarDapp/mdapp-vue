@@ -224,6 +224,7 @@ export const store = new Vuex.Store({
       state.nextBlockAllEdit = payload
       state.nextBlockAllRelease = payload
       state.nextBlockAllNSFW = payload
+      state.nextBlockAllBounties = payload
     },
     setNextFilterBlock (state, payload) {
       state[`nextBlock${payload.filter}`] = payload.block
@@ -308,6 +309,9 @@ export const store = new Vuex.Store({
         state.forceNSFW.delete(payload)
         state.trigger.forceNSFW++
       }
+    },
+    addBounty (state, payload) {
+      state.bounties += payload
     },
 
     // Other
@@ -440,6 +444,9 @@ export const store = new Vuex.Store({
     },
     removeForceNSFW ({commit}, payload) {
       commit('removeForceNSFW', payload)
+    },
+    addBounty ({commit}, payload) {
+      commit('addBounty', payload)
     },
 
     // Other

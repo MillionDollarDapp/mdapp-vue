@@ -1,30 +1,29 @@
 <template>
-  <b-row class="m-0">
-    <b-col class="p-0">
-      <b-jumbotron header-tag="div" fluid container-fluid>
-        <template slot="header">
-          <b-row>
-            <b-col v-if="isActive"><p>MDAPP Token {{title}} ends in</p></b-col>
-            <b-col v-else-if="start > Date.now()"><p>MDAPP Token {{title}} starts in</p></b-col>
-          </b-row>
-          <countdown v-if="countdown > 0" v-bind:time="countdown" v-on:countdownend="handleCountdownEnd">
-            <template slot-scope="props">
-            <b-row class="justify-content-md-center">
-              <b-col md="auto">{{ props.days }}<span class="time-label">Days</span></b-col><b-col md="auto">:</b-col>
-              <b-col md="auto">{{ props.hours }}<span class="time-label">Hours</span></b-col><b-col md="auto">:</b-col>
-              <b-col md="auto">{{ props.minutes }}<span class="time-label">Minutes</span></b-col><b-col md="auto">:</b-col>
-              <b-col md="auto">{{ props.seconds }}<span class="time-label">Seconds</span></b-col>
-            </b-row>
-            </template>
-          </countdown>
-          <p v-if="countdown == 0">{{title}} is running and never stops!</p>
+  <div class="sale-countdown p-3" v-if="countdown > 0">
+    <span class="title">
+      <template v-if="isActive">MDAPP Token {{title}} ends in</template>
+      <template v-else-if="start > Date.now()">MDAPP Token {{title}} starts in</template>
+    </span>
+
+    <countdown :time="countdown" v-on:countdownend="handleCountdownEnd">
+      <template slot-scope="props">
+        <b-row class="justify-content-md-center countdown">
+          <b-col md="auto">{{ props.days }}<span class="time-label">Days</span></b-col><b-col md="auto">:</b-col>
+          <b-col md="auto">{{ props.hours }}<span class="time-label">Hours</span></b-col><b-col md="auto">:</b-col>
+          <b-col md="auto">{{ props.minutes }}<span class="time-label">Minutes</span></b-col><b-col md="auto">:</b-col>
+          <b-col md="auto">{{ props.seconds }}<span class="time-label">Seconds</span></b-col>
+        </b-row>
+      </template>
+    </countdown>
+
+    <div class="claiming mt-3" v-if="claimCountdown > 0">
+      <countdown :time="countdown" v-on:countdownend="handleCountdownEnd">
+        <template slot-scope="props">
+          Pixel claiming starts in {{ props.days }}:{{ props.hours }}:{{ props.minutes }}:{{ props.seconds }}
         </template>
-        <!-- <template slot="lead">
-          Be the first to become part of the blockchain history
-        </template> -->
-      </b-jumbotron>
-    </b-col>
-  </b-row>
+      </countdown>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -39,7 +38,8 @@ export default {
   props: {
     title: String,
     start: Number,
-    end: Number
+    end: Number,
+    claim: Number
   },
 
   data () {
@@ -61,6 +61,13 @@ export default {
         return 0
       }
       return this.start - Date.now()
+    },
+
+    claimCountdown () {
+      if (this.claim && this.claim - Date.now() > 0) {
+        return this.claim - Date.now()
+      }
+      return 0
     },
 
     isActive () {
@@ -95,7 +102,24 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+  @import "~bootstrap/scss/bootstrap.scss";
+
+  .sale-countdown {
+    font-size: 2.2rem;
+  }
+
+  .countdown {
+    font-size: 1.5rem;
+  }
+  .countdown > div {
+    padding: 0 5px;
+  }
+
+  .claiming {
+    font-size: 0.8rem;
+  }
+
   .time-label {
     display: block;
     font-size: 1rem;
