@@ -926,7 +926,7 @@ export default {
     margin: 0 auto;
     position: relative;
     width: 1251px;
-    height: 800px;
+    height: 802px;
   }
 
   .canvas-container {
