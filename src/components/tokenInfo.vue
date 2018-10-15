@@ -19,7 +19,7 @@
       <div class="w-100"/>
       <b-col cols="4" class="label">Transfer enabled:</b-col><b-col cols="auto">When sale has ended</b-col>
       <div class="w-100"/>
-      <b-col cols="4" class="label">When ready?</b-col><b-col class="font-weight-bold" cols="auto">It is - you're using it right now! Only time machine feature is missing, which is scheduled for Q4.</b-col>
+      <b-col cols="4" class="label">When ready?</b-col><b-col class="font-weight-bold">It is - you're using it right now! Only time machine feature is missing, which is scheduled for Q4.</b-col>
     </b-row>
   </div>
 </template>
@@ -39,6 +39,8 @@ export default {
 
   .no-padding div {
     padding-right: 0;
+    word-wrap: break-word;
+    white-space: initial;
   }
 
   .label {

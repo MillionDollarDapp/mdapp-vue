@@ -1,27 +1,29 @@
 <template>
-  <div class="sale-countdown p-3" v-if="countdown > 0">
-    <span class="title">
-      <template v-if="isActive">MDAPP Token {{title}} ends in</template>
-      <template v-else-if="start > Date.now()">MDAPP Token {{title}} starts in</template>
-    </span>
+  <div class="sale-countdown p-3 d-flex flex-column justify-content-center" v-if="countdown > 0">
+    <div>
+      <span class="title">
+        <template v-if="isActive">MDAPP Token {{title}} ends in</template>
+        <template v-else-if="start > Date.now()">MDAPP Token {{title}} starts in</template>
+      </span>
 
-    <countdown :time="countdown" v-on:countdownend="handleCountdownEnd">
-      <template slot-scope="props">
-        <b-row class="justify-content-md-center countdown">
-          <b-col md="auto">{{ props.days }}<span class="time-label">Days</span></b-col><b-col md="auto">:</b-col>
-          <b-col md="auto">{{ props.hours }}<span class="time-label">Hours</span></b-col><b-col md="auto">:</b-col>
-          <b-col md="auto">{{ props.minutes }}<span class="time-label">Minutes</span></b-col><b-col md="auto">:</b-col>
-          <b-col md="auto">{{ props.seconds }}<span class="time-label">Seconds</span></b-col>
-        </b-row>
-      </template>
-    </countdown>
-
-    <div class="claiming mt-3" v-if="claimCountdown > 0">
       <countdown :time="countdown" v-on:countdownend="handleCountdownEnd">
         <template slot-scope="props">
-          Pixel claiming starts in {{ props.days }}:{{ props.hours }}:{{ props.minutes }}:{{ props.seconds }}
+          <b-row class="justify-content-md-center countdown">
+            <b-col md="auto">{{ props.days }}<span class="time-label">Days</span></b-col><b-col md="auto">:</b-col>
+            <b-col md="auto">{{ props.hours }}<span class="time-label">Hours</span></b-col><b-col md="auto">:</b-col>
+            <b-col md="auto">{{ props.minutes }}<span class="time-label">Minutes</span></b-col><b-col md="auto">:</b-col>
+            <b-col md="auto">{{ props.seconds }}<span class="time-label">Seconds</span></b-col>
+          </b-row>
         </template>
       </countdown>
+
+      <div class="claiming mt-3" v-if="claimCountdown > 0">
+        <countdown :time="countdown" v-on:countdownend="handleCountdownEnd">
+          <template slot-scope="props">
+            Pixel claiming starts in {{ props.days }}:{{ props.hours }}:{{ props.minutes }}:{{ props.seconds }}
+          </template>
+        </countdown>
+      </div>
     </div>
   </div>
 </template>

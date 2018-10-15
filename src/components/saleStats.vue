@@ -1,6 +1,6 @@
 <template>
-  <div class='sale-stats p-3'>
-    <div id='chart'/>
+  <div class="sale-stats p-3 d-flex flex-column justify-content-center">
+    <div id="chart"/>
   </div>
 </template>
 
