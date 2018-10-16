@@ -17,8 +17,8 @@
       <li>If one gets tired of an ad, it can be released, which will in turn unlock the tokens.</li>
     </ol>
     <p><span class="font-weight-bold">What's so special about it?</span><br />
-      While all traditional web applications are centralized regarding content storage, content- and platform-government
-      this website is only <span class="font-weight-bold">a window to a completely distributed application without
+      While all traditional web applications are centralized regarding content storage, content- and platform-governance,
+      this website is only <span class="font-weight-bold">a window to a completely decentralized application without
       any authority</span> about the contents and ownership of pixels. Once you own a MDAPP token you have the guaranteed
       possibility to place any ad you like. It's technical impossible that anyone in the world hinders you to do that!
       Every single interaction (buy token, claim pixels, edit content, release pixels) is stored on the Ethereum
