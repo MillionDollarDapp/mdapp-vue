@@ -15,7 +15,7 @@ import utils from '../util/utils'
 Vue.use(Vuex)
 
 export const store = new Vuex.Store({
-  strict: true,
+  strict: process.env.NODE_ENV !== 'production',
   state,
   getters,
   mutations: {
