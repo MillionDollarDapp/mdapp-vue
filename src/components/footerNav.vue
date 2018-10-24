@@ -119,9 +119,11 @@ export default {
 
   watch: {
     web3DataTrigger () {
-      this.version = this.$store.state.web3.web3Watcher().version
-      this.network = NETWORKS[this.$store.state.web3.networkId].name
-      this.blockexplorer = NETWORKS[this.$store.state.web3.networkId].blockexplorerBaseURL
+      if (this.$store.state.web3.web3Watcher) {
+        this.version = this.$store.state.web3.web3Watcher().version
+        this.network = NETWORKS[this.$store.state.web3.networkId].name
+        this.blockexplorer = NETWORKS[this.$store.state.web3.networkId].blockexplorerBaseURL
+      }
     },
 
     mdappTrigger () {
