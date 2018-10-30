@@ -15,8 +15,15 @@ const web3Manager = {
    */
   async init () {
     let injected
+    let needsAuthorization
 
-    if (typeof window.web3 !== 'undefined' && (store.state.web3.isInjected === null || store.state.web3.isInjected === true)) {
+    // Modern dapp browsers...
+    if (window.ethereum !== undefined && (store.state.web3.isInjected === null || store.state.web3.isInjected === true)) {
+      console.log('modern dapp!')
+      window.web3 = new Web3(window.ethereum)
+      injected = true
+      needsAuthorization = true
+    } else if (window.web3 !== undefined && (store.state.web3.isInjected === null || store.state.web3.isInjected === true)) {
       // Overwrite injected web3 with our own version.
       window.web3 = new Web3(window.web3.currentProvider)
       injected = true
@@ -33,7 +40,7 @@ const web3Manager = {
       console.error('init web3:', error)
     }
 
-    store.dispatch('setWeb3Instance', {web3: window.web3, injected: injected, networkId: network})
+    store.dispatch('setWeb3Instance', {web3: window.web3, injected: injected, needsAuthorization: needsAuthorization, networkId: network})
 
     // Create another web3 instance used for event subscriptions.
     window.web3Watcher = new Web3(this._getCustomProvider())
@@ -50,7 +57,7 @@ const web3Manager = {
    * @param needSubscriptions whether you need subscription functionality or not
    */
   getInstance (needSubscriptions) {
-    needSubscriptions = typeof needSubscriptions === 'undefined' ? false : needSubscriptions
+    needSubscriptions = needSubscriptions === undefined ? false : needSubscriptions
 
     // If a web3 instance with subscription capabilities is requested, return the watcher instance, otherwise the
     // injected one.
@@ -58,6 +65,16 @@ const web3Manager = {
       return this.isConnected ? window.web3Watcher : false
     }
     return store.state.web3.isInjected || this.isConnected ? window.web3 : false
+  },
+
+  /**
+   * Asks the user to allow access to account information.
+   * Don't catch users denial. Handle this at the calling method.
+   */
+  async requestAuthorization () {
+    if (store.state.web3.needsAuthorization) {
+      await window.ethereum.enable()
+    }
   },
 
   /**

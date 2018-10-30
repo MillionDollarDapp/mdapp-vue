@@ -1,5 +1,6 @@
 import Raven from 'raven-js'
 import {store} from '../../store/'
+import web3Manager from '../web3Manager'
 
 export default {
   async buy (beneficiary, tokenAmount, wei, recruiter) {
@@ -7,6 +8,8 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
+
+      await web3Manager.requestAuthorization()
 
       let gas = await store.state.saleContractInstance().methods.buyTokens(beneficiary, tokenAmount, recruiter).estimateGas({from: store.state.web3.coinbase, value: wei})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
@@ -24,6 +27,8 @@ export default {
         throw new Error('Sale contract not instantiated.')
       }
 
+      await web3Manager.requestAuthorization()
+
       let gas = await store.state.saleContractInstance().methods.activateOracle().estimateGas({from: store.state.web3.coinbase, value: wei})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
       return [null, store.state.saleContractInstance().methods.activateOracle().send({from: store.state.web3.coinbase, value: wei, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
@@ -40,6 +45,8 @@ export default {
         throw new Error('Sale contract not instantiated.')
       }
 
+      await web3Manager.requestAuthorization()
+
       let gas = await store.state.saleContractInstance().methods.withdrawPayments().estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
       return [null, store.state.saleContractInstance().methods.withdrawPayments().send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
@@ -55,6 +62,8 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
+
+      await web3Manager.requestAuthorization()
 
       let gas = await store.state.saleContractInstance().methods.withdrawOracleFunds().estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
@@ -73,6 +82,8 @@ export default {
         throw new Error('Sale contract not instantiated.')
       }
 
+      await web3Manager.requestAuthorization()
+
       let gas = await store.state.saleContractInstance().methods.setOracleGasPrice(wei).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
       return [null, store.state.saleContractInstance().methods.setOracleGasPrice(wei).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
@@ -88,6 +99,8 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
+
+      await web3Manager.requestAuthorization()
 
       let gas = await store.state.saleContractInstance().methods.setOracleGasLimit(gasLimit).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
@@ -105,6 +118,8 @@ export default {
         throw new Error('Sale contract not instantiated.')
       }
 
+      await web3Manager.requestAuthorization()
+
       let gas = await store.state.saleContractInstance().methods.setOracleInterval(interval).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
       return [null, store.state.saleContractInstance().methods.setOracleInterval(interval).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
@@ -120,6 +135,8 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
+
+      await web3Manager.requestAuthorization()
 
       let gas = await store.state.saleContractInstance().methods.setOracleQueryString(queryString).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
@@ -137,6 +154,8 @@ export default {
         throw new Error('Sale contract not instantiated.')
       }
 
+      await web3Manager.requestAuthorization()
+
       let gas = await store.state.saleContractInstance().methods.setEthUsd(cents).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
       return [null, store.state.saleContractInstance().methods.setEthUsd(cents).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
@@ -152,6 +171,8 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
+
+      await web3Manager.requestAuthorization()
 
       let gas = await store.state.saleContractInstance().methods.grantBounty(beneficiary, tokens, reason).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)

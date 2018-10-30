@@ -58,6 +58,15 @@
                     </b-nav-text>
                   </b-col>
                 </template>
+                <template v-else-if="web3Data.needsAuthorization">
+                  <!--No coinbase given and authorization required-->
+                  <b-col md="auto">
+                    <b-button id="connectBtn" class="ml-2" variant="primary" size="sm" @click="connectBtnPressed"
+                            v-b-tooltip.hover title="Allow this site to access your Ethereum account information.">
+                      <user-icon/> Connect account
+                  </b-button></b-col>
+                </template>
+
                 <!-- NSFW Toggle -->
                 <b-col md="auto" :class="web3Data.coinbase ? 'mx-0 px-0' : ''" v-if="this.$store.state.trigger.forceNSFW && (this.$store.state.forceNSFW.size > 0 || this.$store.state.adsWithNSFW > 0)">
                   <b-nav-text>
@@ -91,8 +100,9 @@
                   </b-dropdown>
                 </b-col>
               </template>
-              <template v-if="!web3Data.isInjected || !web3Data.coinbase">
-                <b-col md="auto"><user-icon/> <b-nav-text>Please install and unlock <a href="https://metamask.io/" target="_blank">Metamask</a></b-nav-text></b-col>
+              <template v-else>
+                <!--Not injected-->
+                <b-col md="auto"><user-icon/><b-nav-text>Please install <a href="https://metamask.io/" target="_blank">Metamask</a></b-nav-text></b-col>
               </template>
             </b-row>
           </b-collapse>
@@ -201,6 +211,12 @@ export default {
 
     buyBtnPressed () {
       this.$root.$emit('bv::show::modal', 'modalBuyNav')
+    },
+
+    async connectBtnPressed () {
+      try {
+        await web3Manger.requestAuthorization()
+      } catch (err) {}
     },
 
     withdrawReferralBalance () {

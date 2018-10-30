@@ -10,6 +10,8 @@ export default {
         throw new Error('Sale contract not instantiated.')
       }
 
+      await web3Manager.requestAuthorization()
+
       let gas = await store.state.mdappContractInstance().methods.allowTransfer().estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)
       return [null, store.state.mdappContractInstance().methods.allowTransfer().send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
@@ -25,6 +27,8 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
+
+      await web3Manager.requestAuthorization()
 
       x = x / 10
       y = y / 10
@@ -47,6 +51,8 @@ export default {
         throw new Error('Sale contract not instantiated.')
       }
 
+      await web3Manager.requestAuthorization()
+
       let gas = await store.state.mdappContractInstance().methods.release(adId).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.5 * 10) * gas) / 10)
       return [null, store.state.mdappContractInstance().methods.release(adId).send({from: store.state.web3.coinbase, gas: safeGas, gasPrice: store.state.web3.gasPrice})]
@@ -62,6 +68,8 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
+
+      await web3Manager.requestAuthorization()
       let web3 = web3Manager.getInstance()
 
       storageEnginge = storageEnginge === undefined ? web3.utils.asciiToHex('ipfs') : web3.utils.asciiToHex(storageEnginge)
@@ -80,6 +88,8 @@ export default {
       if (store.state.saleContractInstance === null) {
         throw new Error('Sale contract not instantiated.')
       }
+
+      await web3Manager.requestAuthorization()
 
       let gas = await store.state.mdappContractInstance().methods.forceNSFW(adId).estimateGas({from: store.state.web3.coinbase})
       let safeGas = Math.round(((1.1 * 10) * gas) / 10)

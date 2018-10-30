@@ -158,7 +158,15 @@
               <b-col md="auto">Total cost:</b-col><b-col md="auto" class="text-right">${{ missingTokens * 100 }} ({{ costEth.toFixed(8) }} ETH)</b-col>
             </b-row>
             <b-row class="mt-2" v-if="!$store.state.web3.coinbase">
-              <b-col md="auto">Install <a href="https://metamask.io" target="_blank">MetaMask</a> and unlock an account to proceed.</b-col>
+              <b-col md="auto" v-if="!$store.state.web3.isInjected">
+                Install <a href="https://metamask.io" target="_blank">MetaMask</a> and connect an account to proceed.
+              </b-col>
+              <b-col md="auto" v-else-if="!$store.state.web3.needsAuthorization">
+                Unlock MetaMask to proceed.
+              </b-col>
+              <b-col md="auto" v-else>
+                <a href="#" @click="connectAccount">Connect an account</a> to proceed.
+              </b-col>
             </b-row>
             <b-row>
               <b-col class="text-center"><b-button variant="success" :disabled="!buyPossible || !$store.state.web3.coinbase" @click="buyBtnPressed">Buy {{ missingTokens }} MDAPP Token(s)</b-button></b-col>
@@ -260,6 +268,12 @@ export default {
   },
 
   methods: {
+    async connectAccount () {
+      try {
+        await web3Manager.requestAuthorization()
+      } catch (err) {}
+    },
+
     isClaimActive () {
       // Rerun this method until we fetched the data from our contract.
       if (this.adStartAll === null || this.adStartPresale === null) {

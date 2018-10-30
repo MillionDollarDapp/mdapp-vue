@@ -1,6 +1,7 @@
 let state = {
   web3: {
     isInjected: null,
+    needsAuthorization: null,
     connectionState: 'disconnected',
     web3Instance: null,
     web3Watcher: null,

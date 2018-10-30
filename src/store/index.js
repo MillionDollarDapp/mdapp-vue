@@ -22,6 +22,7 @@ export const store = new Vuex.Store({
     setWeb3Instance (state, payload) {
       state.web3.web3Instance = () => payload.web3
       state.web3.isInjected = payload.injected
+      state.web3.needsAuthorization = payload.needsAuthorization
       state.web3.networkId = payload.networkId
       state.trigger.web3Instance++
     },
