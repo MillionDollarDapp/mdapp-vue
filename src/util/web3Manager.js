@@ -19,7 +19,6 @@ const web3Manager = {
 
     // Modern dapp browsers...
     if (window.ethereum !== undefined && (store.state.web3.isInjected === null || store.state.web3.isInjected === true)) {
-      console.log('modern dapp!')
       window.web3 = new Web3(window.ethereum)
       injected = true
       needsAuthorization = true

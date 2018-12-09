@@ -41,12 +41,12 @@ const pollWeb3Function = async () => {
         // Call all methods in parallel.
         let values = await Promise.all(promises)
 
-        data.balance = web3.utils.toBN(values[0])
+        data.balance = values[0] ? web3.utils.toBN(values[0]) : web3.utils.toBN(0)
         data.balanceEth = Number(web3.utils.fromWei(data.balance, 'ether')).toFixed(3)
-        data.gasPrice = web3.utils.toBN(values[1])
+        data.gasPrice = values[1] ? web3.utils.toBN(values[1]) : web3.utils.toBN(0)
 
         if (conditionalPromises.oracle) {
-          data.oracleFunds = web3.utils.toBN(values[2])
+          data.oracleFunds = values[2] ? web3.utils.toBN(values[2]) : web3.utils.toBN(0)
         }
 
         // Set helper progress based on balance.
