@@ -97,7 +97,7 @@ export default {
     endpoint () {
       let web3 = web3Manager.getInstance(true)
       if (this.$store.state.trigger.web3Watcher && this.$store.state.web3.connectionState && web3) {
-        return web3.eth.currentProvider.connection.url
+        return process.env.WEB3_ENDPOINT[this.$store.state.web3.networkId]
       }
       return 'n/a'
     },

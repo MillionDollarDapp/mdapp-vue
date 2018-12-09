@@ -2,6 +2,7 @@ import Web3 from 'web3'
 import {store} from '../store/'
 import pollWeb3 from './pollWeb3'
 import filters from './filters/filters'
+import { NETWORKS } from './constants/networks'
 
 const web3Manager = {
   isConnected: false,
@@ -129,7 +130,10 @@ const web3Manager = {
     let network = store.state.web3.networkId
     if (!network) network = process.env.DEFAULT_NETWORK
 
-    this._customProvider = new Web3.providers.WebsocketProvider(process.env.WEB3_ENDPOINT[network])
+    let endpoint = process.env.WEB3_ENDPOINT[network]
+    if (NETWORKS[network].appendProjectID) endpoint += process.env.INFURA_PROJECT_ID
+
+    this._customProvider = new Web3.providers.WebsocketProvider(endpoint)
     this._customProvider.on('connect', (e) => {
       this._handleConnect(e)
     })
