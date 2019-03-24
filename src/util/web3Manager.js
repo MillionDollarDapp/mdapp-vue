@@ -157,7 +157,7 @@ const web3Manager = {
     this.isConnected = true
     this._isReconnecting = false
     store.dispatch('setConnectionState', 'connected')
-    console.info(`connected to ${e.target.url}`)
+    console.info('connected:', e)
 
     try {
       // Data might have changed.

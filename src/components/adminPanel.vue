@@ -106,10 +106,10 @@
               Last update: {{ this.dateFormatter.format(new Date(this.$store.state.oracleLastUpdate)) }}
             </template>
           </p>
-          <!--<div class="d-flex justify-content-between">-->
-            <!--<b-form-input v-model="newETHUSD" type="number" size="sm" placeholder="in cents"/>-->
-            <!--<b-button variant="success" class="mt-2" size="sm" @click="setETHUSD">Set ETH/USD</b-button>-->
-          <!--</div>-->
+          <div class="d-flex justify-content-between">
+            <b-form-input v-model="newETHUSD" type="number" size="sm" placeholder="in cents"/>
+            <b-button variant="success" class="mt-2" size="sm" @click="setETHUSD">Set ETH/USD</b-button>
+          </div>
         </b-card>
 
         <b-card header="Oracle funds">

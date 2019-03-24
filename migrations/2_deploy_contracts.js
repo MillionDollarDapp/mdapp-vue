@@ -1,5 +1,5 @@
-var MDAPPSale = artifacts.require("MDAPPSale");
-var MDAPP = artifacts.require("MDAPP");
+var MDAPPSale = artifacts.require("MDAPPSale")
+var MDAPP = artifacts.require("MDAPP")
 var MDAPPToken = artifacts.require("MDAPPToken")
 
 /**
@@ -30,29 +30,28 @@ module.exports = function(deployer, network, accounts) {
   console.log('################################################');
   console.log('Deploying on network:', network);
   console.log('Used account:', accounts[0]);
-  console.log('Now:', latestTime());
 
-  startTimePre = latestTime() + duration.seconds(60);
-  endTimePre = startTimePre + duration.seconds(5);
-  startTimeSale = endTimePre + duration.seconds(5);
-  presaleAdStart = startTimeSale + duration.seconds(70);
-  allAdStart = startTimeSale + duration.seconds(80);
+  startTimePre = latestTime() + duration.seconds(180);
+  endTimePre = startTimePre + duration.seconds(120);
+  startTimeSale = endTimePre + duration.seconds(30);
+  presaleAdStart = startTimeSale;
+  allAdStart = startTimeSale + duration.seconds(120);
 
-  ethusd = 500000;
+  ethusd = 50000000;
   oracleInterval = 30;
   wallet = accounts[1];
   // OAR = '0x6f485C8BF6fc43eA212E93BBF8ce046C7f1cb475';
 
   if (network === 'rinkeby') {
     console.log('Loading config for Rinkeby');
-    startTimePre = latestTime() + duration.minutes(30);
-    endTimePre = startTimePre + duration.minutes(15);
-    startTimeSale = endTimePre + duration.minutes(10);
-    presaleAdStart = startTimeSale + duration.minutes(5);
-    allAdStart = startTimeSale + duration.minutes(15);
+    startTimePre = 1539216000; // 11.10. 00:00 UTC
+    endTimePre = 1539820799; // 17.10. 23:59:59 UTC
+    startTimeSale = 1539820800; // 18.10. 00:00 UTC
+    presaleAdStart = 1539820800; // 18.10. 00:00 UTC
+    allAdStart = 1540425600; // 25.10. 00:00 UTC
 
-    ethusd = 28000;
-    oracleInterval = duration.hours(1);
+    ethusd = 22000;
+    oracleInterval = duration.hours(2);
     wallet = '0xeF3aB84122597654F1B4641Beb281603F3067CE3';
     // OAR = '0x146500cfd35B22E4A392Fe0aDc06De1a1368Ed48';
   }

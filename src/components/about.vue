@@ -45,8 +45,7 @@
       In 2016 I quit my job to finally bring my studies to an end and to change my focus completely to Blockchain
       related topics. As a consequence, the title of my Bachelor thesis became “Combining Network and Blockchain
       Information for Deanonymization in Bitcoin”.<br />
-      The MillionDollarDAPP is my lighthouse project to complement my theoretical knowledge with practical experience
-      and to have a reference for my now starting job search.<br />
+      The MillionDollarDAPP is my lighthouse project to complement my theoretical knowledge with practical experience.<br />
       <span class="font-weight-bold d-inline-block mt-2">How did I come up with Blockchains?</span><br />
       I came into crypto in early 2013 by mining some Peercoin out of curiosity. However, I was not yet convinced by
       crypto currencies because I had too little background knowledge yet and could not imagine that a currency, which
